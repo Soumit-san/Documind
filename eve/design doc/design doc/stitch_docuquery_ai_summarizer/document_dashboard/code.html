@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&amp;family=Satoshi:wght@400;500;700;900&amp;family=Cabinet+Grotesk:wght@400;500;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .dot-pattern {
+            background-image: radial-gradient(#000000 10%, transparent 10%);
+            background-size: 32px 32px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#ffe17c",
+                        "primary-fixed-dim": "#e1c563",
+                        "background": "#15130d",
+                        "tertiary-fixed-dim": "#74d5e1",
+                        "on-secondary-fixed-variant": "#3c4a47",
+                        "on-tertiary-container": "#006f79",
+                        "inverse-primary": "#715c00",
+                        "surface-variant": "#38342d",
+                        "error": "#ffb4ab",
+                        "on-secondary-container": "#a9b8b4",
+                        "surface-dim": "#15130d",
+                        "tertiary-fixed": "#91f1fd",
+                        "on-primary-fixed": "#231b00",
+                        "on-surface-variant": "#cfc6b2",
+                        "on-tertiary-fixed-variant": "#004f56",
+                        "surface-container-low": "#1e1b15",
+                        "inverse-on-surface": "#333029",
+                        "on-primary": "#3b2f00",
+                        "on-tertiary-fixed": "#001f23",
+                        "outline-variant": "#4c4637",
+                        "on-error": "#690005",
+                        "primary-container": "#ffe17c",
+                        "secondary-container": "#3c4a47",
+                        "surface-container-highest": "#38342d",
+                        "primary": "#ffffff",
+                        "surface-container-lowest": "#100e08",
+                        "on-tertiary": "#00363b",
+                        "surface-tint": "#e1c563",
+                        "secondary-fixed-dim": "#bbcac6",
+                        "secondary-fixed": "#d7e6e2",
+                        "on-primary-container": "#786202",
+                        "on-error-container": "#ffdad6",
+                        "outline": "#98907e",
+                        "inverse-surface": "#e8e2d6",
+                        "surface-container-high": "#2d2a22",
+                        "surface-container": "#221f19",
+                        "surface-bright": "#3c3931",
+                        "surface": "#15130d",
+                        "on-surface": "#e8e2d6",
+                        "error-container": "#93000a",
+                        "tertiary": "#ffffff",
+                        "on-primary-fixed-variant": "#554500",
+                        "secondary": "#bbcac6",
+                        "tertiary-container": "#91f1fd",
+                        "on-secondary-fixed": "#111e1c",
+                        "on-background": "#e8e2d6",
+                        "on-secondary": "#263330"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0px",
+                        "lg": "0px",
+                        "xl": "0px",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "h3": ["Cabinet Grotesk"],
+                        "body-md": ["Satoshi"],
+                        "h2": ["Cabinet Grotesk"],
+                        "body-lg": ["Satoshi"],
+                        "label": ["Satoshi"],
+                        "h1": ["Cabinet Grotesk"]
+                    },
+                    "fontSize": {
+                        "h3": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.03em", "fontWeight": "800"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "500"}],
+                        "h2": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "500"}],
+                        "label": ["14px", {"lineHeight": "1.4", "fontWeight": "700"}],
+                        "h1": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.05em", "fontWeight": "800"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-hidden">
+<div class="flex h-screen w-full">
+<!-- SideNavBar Shell -->
+<aside class="hidden md:flex flex-col h-screen w-64 bg-[#b7c6c2] border-r-2 border-black shadow-[4px_0px_0px_0px_rgba(0,0,0,1)] z-20">
+<div class="p-6">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 bg-black flex items-center justify-center">
+<span class="material-symbols-outlined text-[#ffe17c]" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<div>
+<h1 class="font-['Space_Grotesk'] font-black text-lg text-black uppercase leading-none">DocuMind AI</h1>
+<p class="text-[10px] font-bold text-black/60 uppercase tracking-widest">Chrome Extension</p>
+</div>
+</div>
+<nav class="flex flex-col gap-3">
+<!-- Home (Active) -->
+<a class="flex items-center gap-3 px-4 py-3 bg-[#ffe17c] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-['Space_Grotesk'] font-bold text-black transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span>Home</span>
+</a>
+<!-- Inactive links -->
+<a class="flex items-center gap-3 px-4 py-3 text-black font-['Space_Grotesk'] font-medium hover:bg-white/20 transition-all hover:translate-x-[2px] hover:translate-y-[2px]" href="#">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span>My Library</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-black font-['Space_Grotesk'] font-medium hover:bg-white/20 transition-all hover:translate-x-[2px] hover:translate-y-[2px]" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Shared</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-black font-['Space_Grotesk'] font-medium hover:bg-white/20 transition-all hover:translate-x-[2px] hover:translate-y-[2px]" href="#">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span>AI Assistant</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-black font-['Space_Grotesk'] font-medium hover:bg-white/20 transition-all hover:translate-x-[2px] hover:translate-y-[2px]" href="#">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+<span>Trash</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6 border-t-2 border-black/10">
+<div class="bg-black p-4 mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<p class="text-[#ffe17c] font-black text-xs uppercase mb-2">Pro Plan</p>
+<p class="text-white text-xs mb-3">Unlock unlimited document analysis and team features.</p>
+<button class="w-full py-2 bg-[#ffe17c] text-black font-black text-xs uppercase border-2 border-black hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">Upgrade to Pro</button>
+</div>
+<div class="flex flex-col gap-2">
+<a class="flex items-center gap-3 text-black font-['Space_Grotesk'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="help">help</span>
+<span>Help</span>
+</a>
+<a class="flex items-center gap-3 text-black font-['Space_Grotesk'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="logout">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col h-screen overflow-y-auto bg-surface-container-lowest">
+<!-- TopAppBar Shell -->
+<header class="sticky top-0 z-10 flex justify-between items-center px-8 py-6 w-full bg-[#ffe17c] border-b-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dot-pattern bg-opacity-10">
+<div class="flex items-center gap-8">
+<h2 class="font-h3 text-black uppercase tracking-tighter">Dashboard</h2>
+<div class="hidden lg:flex items-center bg-white border-2 border-black px-4 py-2 w-96 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<span class="material-symbols-outlined text-black/40 mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-black w-full placeholder:text-black/40 uppercase font-black text-xs" placeholder="Search your knowledge base..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-black text-[#ffe17c] px-6 py-2 border-2 border-black font-black uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                        New Project
+                    </button>
+<div class="flex items-center gap-2">
+<button class="w-10 h-10 border-2 border-black flex items-center justify-center text-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span class="material-symbols-outlined" data-icon="bolt">bolt</span></button>
+<button class="w-10 h-10 border-2 border-black flex items-center justify-center text-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"><span class="material-symbols-outlined" data-icon="settings">settings</span></button>
+<div class="w-10 h-10 border-2 border-black bg-[#74d5e1] flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a modern creative professional with a bold aesthetic and neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQiCuK_1b-DaQTMq5Y_Un8eUS8eRbOFWuHd8AzsNdVXtE9osaa8IvT6ESBnMuMWeQEwwlC5OqVffrAmplAe1hSSqcbQZfNlECNo582EZd7Z0qgWHC7PDVIJOxGFgIjLewU9rsIHQFAeQ41EGfkH3pPCv5HhZTCLivukBpAnmNSR6qOdabr1fxRYaAKDEZIqqCGnADHT0KYt-IIJ1Q9atQ5hXFGgKe_er5qvH5ujDKMIkUi7qeu9hAeVpo-6BJoU38mUiXQv_8ZkA"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="p-8 max-w-7xl mx-auto w-full grid grid-cols-12 gap-gutter">
+<!-- Bento Section: Stats -->
+<div class="col-span-12 lg:col-span-8 grid grid-cols-3 gap-gutter">
+<div class="bg-surface-container-high border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<p class="font-label text-on-surface-variant uppercase mb-1">Total Docs</p>
+<p class="font-h2 text-primary leading-none">1,284</p>
+</div>
+<div class="bg-surface-container-high border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<p class="font-label text-on-surface-variant uppercase mb-1">AI Insights</p>
+<p class="font-h2 text-tertiary-fixed leading-none">42</p>
+</div>
+<div class="bg-[#ffe17c] border-2 border-black p-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black">
+<p class="font-label uppercase mb-1">Storage</p>
+<p class="font-h2 leading-none">84%</p>
+</div>
+</div>
+<!-- Recent Activity Feed -->
+<div class="col-span-12 lg:col-span-4 row-span-2 bg-[#bbcac6] border-2 border-black p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col">
+<h3 class="font-h3 text-black uppercase mb-6 border-b-2 border-black pb-2">Activity</h3>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="w-10 h-10 bg-[#ffe17c] border-2 border-black flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-black" data-icon="description">description</span>
+</div>
+<div>
+<p class="text-black font-bold text-sm uppercase">Contract_V2.pdf</p>
+<p class="text-black/60 text-xs">Analyzed by AI Assistant • 2m ago</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 bg-black border-2 border-black flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-[#ffe17c]" data-icon="bolt">bolt</span>
+</div>
+<div>
+<p class="text-black font-bold text-sm uppercase">System Update</p>
+<p class="text-black/60 text-xs">Knowledge graph updated • 1h ago</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 bg-white border-2 border-black flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-black" data-icon="group">group</span>
+</div>
+<div>
+<p class="text-black font-bold text-sm uppercase">Shared Folder</p>
+<p class="text-black/60 text-xs">3 new documents added • 4h ago</p>
+</div>
+</div>
+<div class="flex gap-4 opacity-50">
+<div class="w-10 h-10 bg-white border-2 border-black flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-black" data-icon="sync">sync</span>
+</div>
+<div>
+<p class="text-black font-bold text-sm uppercase">Sync Complete</p>
+<p class="text-black/60 text-xs">Google Drive linked • 12h ago</p>
+</div>
+</div>
+</div>
+<button class="mt-auto w-full py-4 border-2 border-black bg-white text-black font-black uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                        View Full History
+                    </button>
+</div>
+<!-- Document Library Section -->
+<div class="col-span-12 lg:col-span-8">
+<div class="flex justify-between items-end mb-6">
+<h3 class="font-h3 text-primary uppercase">Document Library</h3>
+<div class="flex gap-2">
+<button class="p-2 border-2 border-black bg-surface-container-high text-primary"><span class="material-symbols-outlined">grid_view</span></button>
+<button class="p-2 border-2 border-black bg-surface-container-lowest text-primary/40"><span class="material-symbols-outlined">list</span></button>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<!-- Card 1 -->
+<div class="group bg-surface-container border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+<div class="h-40 bg-surface-variant overflow-hidden border-b-2 border-black relative">
+<img class="w-full h-full object-cover grayscale opacity-50" data-alt="Abstract architectural lines and patterns in monochrome, suggesting structured information and data density" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgCWKio3SFMvtDlyi9iIsSjmz_rkyiUN8VV805F_D-t0DkE1eyBFcWvYOaSaqefCKob6-RNih2RgVw5A3ivoMwOl1cAb4QvoPfr43QR0I7c5ehWei6xUHrNTlzPlqqTY3jRhpfiT8nL5Lc3pi99LumyoqnPP2D-apeXB8ExxzFl7vTH154qKJKQEiIO2Hok-8r8r0uwCknxP6udyJV3Qq6bRaO0buVU4Pg_oRuGjJvkBl728-o1_fZuu0Vk-cRrvwrIGX08ZQ1aQ"/>
+<div class="absolute top-3 right-3 bg-[#ffe17c] text-black px-2 py-1 font-black text-[10px] uppercase border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">PDF</div>
+</div>
+<div class="p-5">
+<h4 class="font-h3 text-lg text-primary uppercase mb-1">Quarterly_Report_Q4.pdf</h4>
+<p class="font-label text-xs text-on-surface-variant uppercase mb-4">Modified 2 days ago • 4.2 MB</p>
+<div class="flex gap-2">
+<span class="px-2 py-1 bg-secondary-container text-secondary text-[10px] font-black uppercase border border-black">Finance</span>
+<span class="px-2 py-1 bg-secondary-container text-secondary text-[10px] font-black uppercase border border-black">AI-Analyzed</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-surface-container border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+<div class="h-40 bg-surface-variant overflow-hidden border-b-2 border-black relative">
+<img class="w-full h-full object-cover grayscale opacity-50" data-alt="Close-up of printed documents with technical diagrams and charts, highlighting analytical detail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBak7yBnw4p0MO_LcDKZk2rNe25FeSdZ6PmWg84srQsMFj4QH_JcgG0JeKgvvQAk6Y-EzFn_ftVzLXb5_Zy-cMeaXmTLD5aURD-10TnH9xz9sTx1ChGpj4M6UpYkJgD7aFJBfWPaCYUMeXCu3nxDeEDf-fb6-6cYWqaAa72m2rMBT6azMEOhndy4DDo3KviSPK1x1LHDe__0bVwFCQ7UAgmUxKNfg1i783CkIav17q2tYbEn0Qc5LWVFq-P38UFTrqdXffGpo5MdQ"/>
+<div class="absolute top-3 right-3 bg-tertiary-fixed text-black px-2 py-1 font-black text-[10px] uppercase border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">DOCX</div>
+</div>
+<div class="p-5">
+<h4 class="font-h3 text-lg text-primary uppercase mb-1">Project_Alpha_Specs.docx</h4>
+<p class="font-label text-xs text-on-surface-variant uppercase mb-4">Modified 5 hours ago • 1.8 MB</p>
+<div class="flex gap-2">
+<span class="px-2 py-1 bg-secondary-container text-secondary text-[10px] font-black uppercase border border-black">Engineering</span>
+<span class="px-2 py-1 bg-secondary-container text-secondary text-[10px] font-black uppercase border border-black">Internal</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Analysis Widget -->
+<div class="col-span-12 bg-primary-container border-2 border-black p-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dot-pattern bg-opacity-10">
+<div class="flex flex-col md:flex-row items-center gap-8">
+<div class="flex-1">
+<h3 class="font-h2 text-black uppercase mb-4">Quick Analysis</h3>
+<p class="font-body-lg text-on-primary-container mb-6 max-w-xl">Drop any document here for instant summarization, data extraction, and sentiment analysis using our latest DocuMind-v4 model.</p>
+<div class="flex gap-4">
+<button class="px-8 py-4 bg-black text-white font-black uppercase border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.5)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">Upload Document</button>
+<button class="px-8 py-4 bg-transparent text-black font-black uppercase border-2 border-black hover:bg-white/10 transition-colors">Paste Text</button>
+</div>
+</div>
+<div class="w-full md:w-80 h-64 border-4 border-dashed border-black/20 flex flex-col items-center justify-center bg-white/20">
+<span class="material-symbols-outlined text-black text-6xl mb-4" data-icon="cloud_upload">cloud_upload</span>
+<p class="font-black text-black uppercase text-sm">Drag &amp; Drop Files</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Shell -->
+<footer class="flex flex-col md:flex-row justify-between items-center px-8 py-8 w-full mt-auto bg-white border-t-2 border-black">
+<div class="flex flex-col md:flex-row items-center gap-8">
+<p class="font-['Space_Grotesk'] text-sm font-bold uppercase text-black">© 2024 DocuMind AI. Built for the bold.</p>
+<div class="flex gap-6">
+<a class="font-['Space_Grotesk'] text-sm font-bold uppercase text-black opacity-80 hover:text-[#ffe17c] transition-colors underline decoration-2 decoration-[#ffe17c]" href="#">Privacy</a>
+<a class="font-['Space_Grotesk'] text-sm font-bold uppercase text-black opacity-80 hover:text-[#ffe17c] transition-colors" href="#">Terms</a>
+<a class="font-['Space_Grotesk'] text-sm font-bold uppercase text-black opacity-80 hover:text-[#ffe17c] transition-colors" href="#">API Status</a>
+</div>
+</div>
+<div class="mt-4 md:mt-0 flex gap-4">
+<div class="w-8 h-8 bg-black flex items-center justify-center text-white"><span class="material-symbols-outlined text-sm">terminal</span></div>
+<div class="w-8 h-8 bg-black flex items-center justify-center text-white"><span class="material-symbols-outlined text-sm">code</span></div>
+</div>
+</footer>
+</main>
+</div>
+</body></html>

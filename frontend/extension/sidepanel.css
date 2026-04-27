@@ -1,0 +1,328 @@
+/* ============================================================
+   DocuMind AI — Neo-Brutalist Side Panel Styles
+   Design System: 2px black borders, 0px radius, hard shadows,
+   Cabinet Grotesk headings, Satoshi body text.
+   ============================================================ */
+
+@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800&f[]=satoshi@500,700&display=swap');
+
+/* --- CSS Custom Properties (from Design Doc) --- */
+:root {
+  /* Surface palette */
+  --surface: #15130d;
+  --surface-bright: #3c3931;
+  --surface-container: #221f19;
+  --surface-container-high: #2d2a22;
+  --on-surface: #e8e2d6;
+  --on-surface-variant: #cfc6b2;
+
+  /* Primary */
+  --primary: #ffe17c;
+  --primary-dim: #e1c563;
+  --on-primary: #3b2f00;
+
+  /* Secondary */
+  --secondary: #bbcac6;
+  --secondary-container: #3c4a47;
+
+  /* Tertiary */
+  --tertiary-container: #91f1fd;
+  --on-tertiary-container: #006f79;
+
+  /* Error */
+  --error: #ffb4ab;
+  --error-container: #93000a;
+
+  /* Borders & Shadows */
+  --border: 2px solid #000000;
+  --shadow-sm: 4px 4px 0px 0px #000000;
+  --shadow-lg: 8px 8px 0px 0px #000000;
+
+  /* Typography */
+  --font-heading: 'Cabinet Grotesk', sans-serif;
+  --font-body: 'Satoshi', sans-serif;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 12px;
+  --space-md: 24px;
+  --space-lg: 48px;
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 380px;
+  height: 100vh;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.6;
+  background: var(--surface);
+  color: var(--on-surface);
+  overflow-x: hidden;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* --- Header --- */
+.dm-header {
+  background: var(--primary);
+  color: var(--on-primary);
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: var(--border);
+}
+
+.dm-logo {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+  line-height: 1.1;
+  margin-bottom: var(--space-xs);
+  /* Neo-brutalist dot pattern texture */
+  background-image: radial-gradient(#000000 10%, transparent 10%);
+  background-size: 32px 32px;
+  padding: var(--space-xs) 0;
+}
+
+.dm-logo-accent {
+  color: var(--surface);
+  margin-left: 4px;
+}
+
+/* --- Tabs --- */
+.dm-tabs {
+  display: flex;
+  gap: 0;
+  margin-top: var(--space-xs);
+}
+
+.dm-tab {
+  flex: 1;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 4px;
+  background: transparent;
+  color: var(--on-primary);
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.dm-tab:hover {
+  border-bottom-color: var(--on-primary);
+}
+
+.dm-tab--active {
+  border-bottom-color: var(--surface);
+  color: var(--surface);
+}
+
+/* --- Panels --- */
+.dm-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+}
+
+.dm-panel[hidden] {
+  display: none;
+}
+
+/* --- Cards (Neo-Brutalist) --- */
+.dm-card {
+  background: var(--surface-container-high);
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--space-md);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.dm-card:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.dm-card__title {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: var(--border);
+  background: var(--surface-container);
+}
+
+.dm-card__body {
+  padding: var(--space-md);
+}
+
+/* --- Buttons --- */
+.dm-btn {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 10px 20px;
+  border: var(--border);
+  border-radius: 0;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.dm-btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.dm-btn--primary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.dm-btn--primary:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.dm-btn--secondary {
+  background: var(--secondary-container);
+  color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+  width: 100%;
+  margin-bottom: var(--space-sm);
+}
+
+.dm-btn--secondary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+/* --- Input Fields --- */
+.dm-input {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 14px;
+  border: var(--border);
+  border-radius: 0;
+  background: var(--surface-container);
+  color: var(--on-surface);
+  outline: none;
+  width: 100%;
+  transition: box-shadow 0.1s ease;
+}
+
+.dm-input:focus {
+  box-shadow: var(--shadow-sm);
+  background: var(--surface-container-high);
+}
+
+.dm-input::placeholder {
+  color: var(--on-surface-variant);
+  opacity: 0.6;
+}
+
+/* --- Chat --- */
+.dm-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.dm-chat__messages {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: var(--space-md);
+}
+
+.dm-message {
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-sm);
+  border: var(--border);
+}
+
+.dm-message--user {
+  background: var(--primary);
+  color: var(--on-primary);
+  margin-left: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.dm-message--assistant {
+  background: var(--surface-container-high);
+  color: var(--on-surface);
+  margin-right: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.dm-chat__input-row {
+  display: flex;
+  gap: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: var(--border);
+}
+
+.dm-chat__input-row .dm-input {
+  flex: 1;
+}
+
+/* --- Chips / Tags --- */
+.dm-chip {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  background: var(--secondary-container);
+  color: var(--secondary);
+  border: var(--border);
+  margin: 2px;
+}
+
+/* --- Placeholder --- */
+.dm-placeholder {
+  color: var(--on-surface-variant);
+  opacity: 0.7;
+  font-style: normal;
+  text-align: center;
+  padding: var(--space-lg) 0;
+}
+
+/* --- Export Options --- */
+.dm-export-options {
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Scrollbar Styling --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-bright);
+  border: 1px solid #000000;
+}

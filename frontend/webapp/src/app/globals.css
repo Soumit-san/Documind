@@ -1,0 +1,292 @@
+@import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800&f[]=satoshi@500,700&display=swap');
+@import "tailwindcss";
+
+/* =============================================================
+   DocuMind AI — Neo-Brutalist Design System
+   Based on Design Doc: 2px solid borders, 0px radius, hard shadows,
+   Cabinet Grotesk headings, Satoshi body, charcoal + gold palette.
+   ============================================================= */
+
+:root {
+  /* Surface palette */
+  --surface: #15130d;
+  --surface-dim: #15130d;
+  --surface-bright: #3c3931;
+  --surface-container-lowest: #100e08;
+  --surface-container-low: #1e1b15;
+  --surface-container: #221f19;
+  --surface-container-high: #2d2a22;
+  --surface-container-highest: #38342d;
+  --on-surface: #e8e2d6;
+  --on-surface-variant: #cfc6b2;
+  --inverse-surface: #e8e2d6;
+  --inverse-on-surface: #333029;
+
+  /* Outline */
+  --outline: #98907e;
+  --outline-variant: #4c4637;
+
+  /* Primary (Gold) */
+  --primary: #ffe17c;
+  --primary-dim: #e1c563;
+  --on-primary: #3b2f00;
+  --primary-container: #ffe17c;
+  --on-primary-container: #786202;
+
+  /* Secondary (Sage) */
+  --secondary: #bbcac6;
+  --on-secondary: #263330;
+  --secondary-container: #3c4a47;
+  --on-secondary-container: #a9b8b4;
+
+  /* Tertiary (Cyan) */
+  --tertiary: #91f1fd;
+  --tertiary-container: #91f1fd;
+  --on-tertiary-container: #006f79;
+
+  /* Error */
+  --error: #ffb4ab;
+  --on-error: #690005;
+  --error-container: #93000a;
+  --on-error-container: #ffdad6;
+
+  /* Borders & Shadows */
+  --border-color: #000000;
+  --border: 2px solid #000000;
+  --shadow-sm: 4px 4px 0px 0px #000000;
+  --shadow-lg: 8px 8px 0px 0px #000000;
+
+  /* Typography */
+  --font-heading: 'Cabinet Grotesk', sans-serif;
+  --font-body: 'Satoshi', sans-serif;
+
+  /* Spacing (8px rhythm) */
+  --space-xs: 4px;
+  --space-sm: 12px;
+  --space-md: 24px;
+  --space-lg: 48px;
+  --space-xl: 64px;
+  --gutter: 24px;
+
+  /* Background vars for Tailwind compat */
+  --background: #15130d;
+  --foreground: #e8e2d6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-dim: var(--primary-dim);
+  --color-on-primary: var(--on-primary);
+  --color-secondary: var(--secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-surface: var(--surface);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-tertiary: var(--tertiary);
+  --color-error: var(--error);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--surface);
+  color: var(--on-surface);
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Typography --- */
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+h1 { font-size: 64px; letter-spacing: -0.05em; }
+h2 { font-size: 48px; }
+h3 { font-size: 32px; letter-spacing: -0.03em; line-height: 1.2; }
+
+/* --- Neo-Brutalist Component Utilities --- */
+
+/* Cards */
+.nb-card {
+  background: var(--surface-container-high);
+  border: var(--border);
+  box-shadow: var(--shadow-lg);
+  border-radius: 0;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.nb-card:hover {
+  transform: translate(4px, 4px);
+  box-shadow: 4px 4px 0px 0px #000000;
+}
+
+.nb-card--sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.nb-card--sm:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.nb-card__header {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: var(--border);
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nb-card__body {
+  padding: var(--space-md);
+}
+
+/* Buttons */
+.nb-btn {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 12px 24px;
+  border: var(--border);
+  border-radius: 0;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nb-btn--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: var(--shadow-sm);
+  /* Dot pattern texture on yellow */
+  background-image: radial-gradient(#000000 10%, transparent 10%);
+  background-size: 32px 32px;
+}
+
+.nb-btn--primary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.nb-btn--primary:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+.nb-btn--secondary {
+  background: var(--secondary-container);
+  color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.nb-btn--secondary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px #000000;
+}
+
+.nb-btn--ghost {
+  background: transparent;
+  color: var(--on-surface);
+  border-color: var(--outline-variant);
+  box-shadow: none;
+}
+
+.nb-btn--ghost:hover {
+  background: var(--surface-container);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Inputs */
+.nb-input {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border: var(--border);
+  border-radius: 0;
+  background: var(--surface-container);
+  color: var(--on-surface);
+  outline: none;
+  width: 100%;
+  transition: box-shadow 0.1s ease, background 0.1s ease;
+}
+
+.nb-input:focus {
+  box-shadow: var(--shadow-sm);
+  background: var(--surface-container-high);
+}
+
+.nb-input::placeholder {
+  color: var(--on-surface-variant);
+  opacity: 0.6;
+}
+
+/* Chips / Tags */
+.nb-chip {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 12px;
+  background: var(--secondary-container);
+  color: var(--secondary);
+  border: var(--border);
+  border-radius: 0;
+}
+
+.nb-chip--primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+/* Yellow surface texture */
+.nb-yellow-surface {
+  background-color: var(--primary);
+  background-image: radial-gradient(#000000 10%, transparent 10%);
+  background-size: 32px 32px;
+  color: var(--on-primary);
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-bright);
+  border: 1px solid #000000;
+}
+
+/* --- Selection --- */
+::selection {
+  background: var(--primary);
+  color: var(--on-primary);
+}

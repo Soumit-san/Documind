@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;700;800;900&amp;family=Satoshi:wght@400;500;700;900&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#ffe17c",
+                      "primary-fixed-dim": "#e1c563",
+                      "background": "#15130d",
+                      "tertiary-fixed-dim": "#74d5e1",
+                      "on-secondary-fixed-variant": "#3c4a47",
+                      "on-tertiary-container": "#006f79",
+                      "inverse-primary": "#715c00",
+                      "surface-variant": "#38342d",
+                      "error": "#ffb4ab",
+                      "on-secondary-container": "#a9b8b4",
+                      "surface-dim": "#15130d",
+                      "tertiary-fixed": "#91f1fd",
+                      "on-primary-fixed": "#231b00",
+                      "on-surface-variant": "#cfc6b2",
+                      "on-tertiary-fixed-variant": "#004f56",
+                      "surface-container-low": "#1e1b15",
+                      "inverse-on-surface": "#333029",
+                      "on-primary": "#3b2f00",
+                      "on-tertiary-fixed": "#001f23",
+                      "outline-variant": "#4c4637",
+                      "on-error": "#690005",
+                      "primary-container": "#ffe17c",
+                      "secondary-container": "#3c4a47",
+                      "surface-container-highest": "#38342d",
+                      "primary": "#ffffff",
+                      "surface-container-lowest": "#100e08",
+                      "on-tertiary": "#00363b",
+                      "surface-tint": "#e1c563",
+                      "secondary-fixed-dim": "#bbcac6",
+                      "secondary-fixed": "#d7e6e2",
+                      "on-primary-container": "#786202",
+                      "on-error-container": "#ffdad6",
+                      "outline": "#98907e",
+                      "inverse-surface": "#e8e2d6",
+                      "surface-container-high": "#2d2a22",
+                      "surface-container": "#221f19",
+                      "surface-bright": "#3c3931",
+                      "surface": "#15130d",
+                      "on-surface": "#e8e2d6",
+                      "error-container": "#93000a",
+                      "tertiary": "#ffffff",
+                      "on-primary-fixed-variant": "#554500",
+                      "secondary": "#bbcac6",
+                      "tertiary-container": "#91f1fd",
+                      "on-secondary-fixed": "#111e1c",
+                      "on-background": "#e8e2d6",
+                      "on-secondary": "#263330"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0px",
+                      "lg": "0px",
+                      "xl": "0px",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sm": "12px",
+                      "xs": "4px",
+                      "xl": "64px",
+                      "md": "24px",
+                      "gutter": "24px",
+                      "base": "8px",
+                      "lg": "48px"
+              },
+              "fontFamily": {
+                      "h3": ["Cabinet Grotesk"],
+                      "body-md": ["Satoshi"],
+                      "h2": ["Cabinet Grotesk"],
+                      "body-lg": ["Satoshi"],
+                      "label": ["Satoshi"],
+                      "h1": ["Cabinet Grotesk"]
+              },
+              "fontSize": {
+                      "h3": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.03em", "fontWeight": "800"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "500"}],
+                      "h2": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "800"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "500"}],
+                      "label": ["14px", {"lineHeight": "1.4", "fontWeight": "700"}],
+                      "h1": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.05em", "fontWeight": "800"}]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+        .neo-shadow-sm { box-shadow: 4px 4px 0px 0px rgba(0,0,0,1); }
+        .neo-shadow-md { box-shadow: 8px 8px 0px 0px rgba(0,0,0,1); }
+        .dot-pattern {
+            background-image: radial-gradient(#000000 10%, transparent 10%);
+            background-size: 32px 32px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+      </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-fixed selection:text-black">
+<!-- Top Navigation -->
+<nav class="flex justify-between items-center px-6 py-4 w-full bg-[#ffe17c] dark:bg-yellow-400 border-b-2 border-black sticky top-0 z-50 dot-pattern bg-opacity-10 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<div class="text-2xl font-black text-black flex items-center gap-2 font-['Space_Grotesk'] uppercase tracking-tight">
+<span class="material-symbols-outlined text-3xl" data-icon="psychology">psychology</span>
+            DocuMind AI
+        </div>
+<div class="hidden md:flex gap-8 items-center font-['Space_Grotesk'] font-bold uppercase tracking-tight">
+<a class="border-b-2 border-black text-black pb-1" href="#">Dashboard</a>
+<a class="text-black/70 hover:translate-x-[2px] hover:translate-y-[2px] transition-all" href="#">Documents</a>
+<a class="text-black/70 hover:translate-x-[2px] hover:translate-y-[2px] transition-all" href="#">Analysis</a>
+<a class="text-black/70 hover:translate-x-[2px] hover:translate-y-[2px] transition-all" href="#">Team</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="hidden lg:flex items-center gap-2 text-black font-bold uppercase border-2 border-black px-4 py-2 neo-shadow-sm bg-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all active:translate-x-[4px] active:translate-y-[4px]">
+<span class="material-symbols-outlined" data-icon="bolt">bolt</span>
+                New Project
+            </button>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-black cursor-pointer" data-icon="settings">settings</span>
+<span class="material-symbols-outlined text-black cursor-pointer" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</nav>
+<!-- Hero Section -->
+<section class="bg-[#ffe17c] dot-pattern bg-opacity-10 py-20 px-6 border-b-2 border-black">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<div class="flex flex-col gap-8">
+<h1 class="font-h1 text-h1 text-black">
+                    STOP READING.<br/>
+                    START <span class="bg-black text-primary-fixed px-4">KNOWING.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-black max-w-lg">
+                    DocuMind AI transforms your messy PDFs and infinite documents into a searchable, chat-ready knowledge base using advanced RAG technology.
+                </p>
+<div class="flex flex-wrap gap-4">
+<button class="bg-black text-white font-h3 text-xl px-8 py-4 border-2 border-black neo-shadow-md hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none transition-all">
+                        Start Free Trial
+                    </button>
+<button class="bg-white text-black font-h3 text-xl px-8 py-4 border-2 border-black neo-shadow-sm hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none transition-all">
+                        View Demo
+                    </button>
+</div>
+<div class="flex items-center gap-4 mt-4">
+<div class="flex -space-x-2">
+<img alt="User" class="w-12 h-12 border-2 border-black" data-alt="close-up portrait of a professional woman with a confident expression in a brightly lit studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCq72Z_VJkl0uhTQHkZzreOZ-YJN2EDHl2mAupqJaux1inbo-EByzqKAD8N76yaFsPIhoa3BUJYbcuNVzfVrolBarMM5iofDa7EMtSJ7cRmIo-51A94ww-2gBSZjbNJFRX8kJs-2UnAUU8mRx-cf87n7ZxAlup8LkXDeM4QoI0FvE2G7PBdCAUAQC50JuicDP1s19OdMuIRQZhtJiYqeeAi35jTbbEzWMF6VZOm4UuhgzmxzFqwkmh7eSVWWInA82xsSIlLqfij1w"/>
+<img alt="User" class="w-12 h-12 border-2 border-black" data-alt="smiling young man with glasses and creative style looking at camera with neutral background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfChq7elgZ5KgHvy8TpMls0P4-2k09wz18VEt_dMBwO-64V1bogd6lgECb-GjppvGez1AGcGvLYpyc6yU-QWUYwD6apW4IpU1MS0HV4qLKJClr0S0EujrR1AxmmgkPpGv_1m5ulfVIPamThkazsTwK4Rxzc-UOciqkqm3cwRdffxelNwu1b6ejjITDIOjkxHGjsrgqL6OCEo4SBz_MUqmxos3Lm6lBwLVZlQk0sjWrnUyUWFbvARB-u87LD9dbpOr6esP3n2tq_A"/>
+<img alt="User" class="w-12 h-12 border-2 border-black" data-alt="professional individual in business attire with a warm friendly smile and modern office background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuxLXKPdA9iOqS6Hu7ETGQLf3FTShnhMXUg59vyKaHFBvq0l6Z_aeOTAAxk3g5_X6wnp13aRPo-_yHYQ3WkDNQGf4Fxu2F7Y0DunJEchLfudu-cQpAQQkhLHkvKDQ2zkIQAhiGflwPnQN8FTjqcTG0xiwLXISFoM7SBTFThze9jUBrocaRZ2wQuhhdCQQ-EhLwUwhokZ9W7G0xhij5i0qDB-AERC134G_A9a926_WGp8pft0YEoSJSO-BAxRAvp4WQ4tiCm0vrNA"/>
+</div>
+<p class="font-label text-black uppercase tracking-widest">Joined by 10k+ researchers</p>
+</div>
+</div>
+<div class="relative">
+<div class="bg-white border-4 border-black neo-shadow-md overflow-hidden">
+<div class="bg-black p-3 flex gap-2 border-b-2 border-black">
+<div class="w-3 h-3 bg-red-500 border border-black"></div>
+<div class="w-3 h-3 bg-yellow-400 border border-black"></div>
+<div class="w-3 h-3 bg-green-500 border border-black"></div>
+</div>
+<img alt="Dashboard" class="w-full grayscale contrast-125" data-alt="modern software interface showing complex data visualizations and document processing analytics on a clean digital screen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAYG_z2Wi8raSlwzoQMOLNBe2mfmqk-CspxcPimav7AamH-sTmL-g7YvWC3un5lzHpT3YklXFKjW1GENxUn1JYIyeKh-yaPcgcGvfSB_OAHzDIeopVcNR70jto5JmCOsnqE3aZxWFNpquhB3bZ4ihKQPFuBQHlwGB0J1MwhjWBdULrgAkRhd58hZ6Ifz3YyfWB3r9hcY66X1ILdbawUlyV7d1nXya815lIs-TdsYw6GO3TIrC1YIMJdKk9UNJgidOd3e41ma6awQ"/>
+<div class="absolute -bottom-6 -left-6 bg-[#74d5e1] p-4 border-2 border-black neo-shadow-sm max-w-[200px]">
+<p class="font-label text-black uppercase">Analysis Complete</p>
+<p class="font-h3 text-xl text-black">89% Time Saved</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Social Proof Marquee -->
+<div class="bg-surface-container-highest border-b-2 border-black py-8 overflow-hidden flex whitespace-nowrap">
+<div class="flex gap-16 animate-infinite-scroll">
+<span class="text-on-surface font-h3 uppercase opacity-50 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="cloud">cloud</span> Google Cloud
+            </span>
+<span class="text-on-surface font-h3 uppercase opacity-50 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="token">token</span> Anthropic
+            </span>
+<span class="text-on-surface font-h3 uppercase opacity-50 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="shield">shield</span> Palantir
+            </span>
+<span class="text-on-surface font-h3 uppercase opacity-50 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="data_usage">data_usage</span> Databricks
+            </span>
+<span class="text-on-surface font-h3 uppercase opacity-50 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span> NVIDIA
+            </span>
+<!-- Duplicate for loop -->
+<span class="text-on-surface font-h3 uppercase opacity-50 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="cloud">cloud</span> Google Cloud
+            </span>
+<span class="text-on-surface font-h3 uppercase opacity-50 flex items-center gap-2">
+<span class="material-symbols-outlined" data-icon="token">token</span> Anthropic
+            </span>
+</div>
+</div>
+<!-- Features Bento Grid -->
+<section class="py-24 px-6 max-w-7xl mx-auto">
+<div class="mb-16">
+<h2 class="font-h2 text-h2 mb-4">ENGINEERED FOR <span class="text-primary-fixed underline decoration-4 underline-offset-8">SPEED.</span></h2>
+<p class="font-body-lg text-on-surface-variant max-w-2xl">Stop scrolling through endless pages. Our RAG engine indexes your entire library in seconds, giving you instant answers with citations.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Large Card -->
+<div class="md:col-span-2 bg-white border-2 border-black p-8 neo-shadow-md flex flex-col justify-between min-h-[400px]">
+<div>
+<span class="bg-[#bbcac6] text-black font-label px-3 py-1 border-2 border-black uppercase mb-6 inline-block">RAG Engine v2.0</span>
+<h3 class="font-h2 text-h2 text-black mb-4">Semantic Deep Dive</h3>
+<p class="text-black/70 text-body-lg max-w-md">Our advanced retrieval-augmented generation allows you to cross-reference multiple documents simultaneously for complex synthesis.</p>
+</div>
+<div class="mt-8">
+<img alt="Data Visualization" class="w-full h-48 object-cover border-2 border-black grayscale contrast-150" data-alt="abstract architectural data visualization with sharp lines and high contrast geometric patterns" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAToLahLil2WuktfV1DPn35ByTHQq9DbJViAinlJobN_bpseaf-jdL0nPnO1TmHffLYj2UxA3mIfQRMqR3Jh1DFHZpCD2zUmj-n4ltWFA0XMcGLRDtsX5aRkMuthlM2_i1C2j1jiFN4U1VL5zKmGV6MSF0CuIYOLf0S4BF4fSM9FgahNEm6sMT_oysZXgymhdCZdPDCiwCHixGRX422zRd6MrnYqpnh6ASxDyRml2Gk2o6kkqWkmfLQnACFy67m0lhTDDlfh_IrfQ"/>
+</div>
+</div>
+<!-- Small Card 1 -->
+<div class="bg-[#74d5e1] border-2 border-black p-8 neo-shadow-md hover:translate-x-[-4px] hover:translate-y-[-4px] transition-all group">
+<span class="material-symbols-outlined text-5xl text-black mb-6" data-icon="summarize">summarize</span>
+<h3 class="font-h3 text-h3 text-black mb-4">Instant Summaries</h3>
+<p class="text-black/80">Get 100-page reports condensed into actionable bullet points in under 3 seconds.</p>
+<div class="mt-12 border-t-2 border-black pt-4 group-hover:pl-4 transition-all">
+<a class="font-bold text-black uppercase flex items-center gap-2" href="#">
+                        Learn More <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Small Card 2 -->
+<div class="bg-white border-2 border-black p-8 neo-shadow-md">
+<span class="material-symbols-outlined text-5xl text-black mb-6" data-icon="chat">chat</span>
+<h3 class="font-h3 text-h3 text-black mb-4">Zero-Hallucination Chat</h3>
+<p class="text-black/80">Every single response is backed by a direct citation to your source documents.</p>
+</div>
+<!-- Small Card 3 -->
+<div class="bg-[#ffe17c] border-2 border-black p-8 neo-shadow-md relative overflow-hidden">
+<div class="relative z-10">
+<span class="material-symbols-outlined text-5xl text-black mb-6" data-icon="group">group</span>
+<h3 class="font-h3 text-h3 text-black mb-4">Team Hubs</h3>
+<p class="text-black/80">Collaborate on shared libraries and analysis folders with granular permissions.</p>
+</div>
+<div class="absolute -right-8 -bottom-8 opacity-10">
+<span class="material-symbols-outlined text-[160px]" data-icon="diversity_3">diversity_3</span>
+</div>
+</div>
+<!-- Small Card 4 -->
+<div class="bg-white border-2 border-black p-8 neo-shadow-md">
+<span class="material-symbols-outlined text-5xl text-black mb-6" data-icon="security">security</span>
+<h3 class="font-h3 text-h3 text-black mb-4">Bank-Grade Security</h3>
+<p class="text-black/80">Your data never leaves our SOC2-compliant encrypted environment.</p>
+</div>
+</div>
+</section>
+<!-- Call to Action -->
+<section class="py-24 px-6">
+<div class="max-w-5xl mx-auto bg-black text-white p-12 border-4 border-[#ffe17c] neo-shadow-md text-center dot-pattern bg-opacity-5">
+<h2 class="font-h1 text-h1 mb-8">READY TO DEBUNK THE NOISE?</h2>
+<p class="font-body-lg text-primary-fixed mb-12 max-w-2xl mx-auto">Join 500+ forward-thinking teams using DocuMind AI to outpace the competition.</p>
+<div class="flex flex-col sm:flex-row justify-center gap-6">
+<button class="bg-[#ffe17c] text-black font-h3 text-xl px-12 py-6 border-2 border-black neo-shadow-sm hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-none transition-all">
+                    Start Free Trial
+                </button>
+<button class="bg-transparent text-white border-2 border-white font-h3 text-xl px-12 py-6 hover:bg-white hover:text-black transition-all">
+                    Talk To Sales
+                </button>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="border-t-2 border-black w-full bg-white dark:bg-black font-['Space_Grotesk'] text-sm font-bold uppercase">
+<div class="flex flex-col md:flex-row justify-between items-center px-8 py-12 w-full gap-8">
+<div class="flex flex-col gap-4">
+<div class="text-2xl font-black text-black dark:text-white uppercase">DocuMind AI</div>
+<p class="opacity-80 max-w-xs text-black dark:text-white">The ultimate research engine for modern technical teams.</p>
+</div>
+<div class="flex gap-12 text-black dark:text-white">
+<div class="flex flex-col gap-4">
+<p class="text-[#ffe17c]">Product</p>
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors" href="#">Features</a>
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors" href="#">Pricing</a>
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors" href="#">Enterprise</a>
+</div>
+<div class="flex flex-col gap-4">
+<p class="text-[#ffe17c]">Resources</p>
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors" href="#">API Status</a>
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors" href="#">Docs</a>
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors" href="#">Support</a>
+</div>
+<div class="flex flex-col gap-4">
+<p class="text-[#ffe17c]">Company</p>
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors" href="#">Privacy</a>
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors" href="#">Terms</a>
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors" href="#">About</a>
+</div>
+</div>
+</div>
+<div class="flex justify-between items-center px-8 py-6 w-full border-t-2 border-black text-black dark:text-white">
+<p>© 2024 DocuMind AI. Built for the bold.</p>
+<div class="flex gap-4">
+<span class="material-symbols-outlined cursor-pointer hover:text-[#ffe17c]" data-icon="alternate_email">alternate_email</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-[#ffe17c]" data-icon="language">language</span>
+</div>
+</div>
+</footer>
+<!-- FAB -->
+<div class="fixed bottom-8 right-8 z-50">
+<button class="bg-[#ffe17c] text-black w-16 h-16 border-2 border-black neo-shadow-sm flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all">
+<span class="material-symbols-outlined text-3xl" data-icon="help" data-weight="fill">help</span>
+</button>
+</div>
+<style>
+        @keyframes infinite-scroll {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+        .animate-infinite-scroll {
+            animation: infinite-scroll 40s linear infinite;
+        }
+    </style>
+</body></html>

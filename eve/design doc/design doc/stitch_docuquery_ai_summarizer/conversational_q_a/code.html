@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Cabinet+Grotesk:wght@400;700;800;900&amp;family=Satoshi:wght@400;500;700;900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .neo-shadow { box-shadow: 4px 4px 0px 0px rgba(0,0,0,1); }
+        .neo-shadow-lg { box-shadow: 8px 8px 0px 0px rgba(0,0,0,1); }
+        .dot-pattern {
+            background-image: radial-gradient(#000 10%, transparent 10%);
+            background-size: 32px 32px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#ffe17c",
+                      "primary-fixed-dim": "#e1c563",
+                      "background": "#15130d",
+                      "tertiary-fixed-dim": "#74d5e1",
+                      "on-secondary-fixed-variant": "#3c4a47",
+                      "on-tertiary-container": "#006f79",
+                      "inverse-primary": "#715c00",
+                      "surface-variant": "#38342d",
+                      "error": "#ffb4ab",
+                      "on-secondary-container": "#a9b8b4",
+                      "surface-dim": "#15130d",
+                      "tertiary-fixed": "#91f1fd",
+                      "on-primary-fixed": "#231b00",
+                      "on-surface-variant": "#cfc6b2",
+                      "on-tertiary-fixed-variant": "#004f56",
+                      "surface-container-low": "#1e1b15",
+                      "inverse-on-surface": "#333029",
+                      "on-primary": "#3b2f00",
+                      "on-tertiary-fixed": "#001f23",
+                      "outline-variant": "#4c4637",
+                      "on-error": "#690005",
+                      "primary-container": "#ffe17c",
+                      "secondary-container": "#3c4a47",
+                      "surface-container-highest": "#38342d",
+                      "primary": "#ffffff",
+                      "surface-container-lowest": "#100e08",
+                      "on-tertiary": "#00363b",
+                      "surface-tint": "#e1c563",
+                      "secondary-fixed-dim": "#bbcac6",
+                      "secondary-fixed": "#d7e6e2",
+                      "on-primary-container": "#786202",
+                      "on-error-container": "#ffdad6",
+                      "outline": "#98907e",
+                      "inverse-surface": "#e8e2d6",
+                      "surface-container-high": "#2d2a22",
+                      "surface-container": "#221f19",
+                      "surface-bright": "#3c3931",
+                      "surface": "#15130d",
+                      "on-surface": "#e8e2d6",
+                      "error-container": "#93000a",
+                      "tertiary": "#ffffff",
+                      "on-primary-fixed-variant": "#554500",
+                      "secondary": "#bbcac6",
+                      "tertiary-container": "#91f1fd",
+                      "on-secondary-fixed": "#111e1c",
+                      "on-background": "#e8e2d6",
+                      "on-secondary": "#263330"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0px",
+                      "lg": "0px",
+                      "xl": "0px",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "h3": ["Cabinet Grotesk"],
+                      "body-md": ["Satoshi"],
+                      "h2": ["Cabinet Grotesk"],
+                      "body-lg": ["Satoshi"],
+                      "label": ["Satoshi"],
+                      "h1": ["Cabinet Grotesk"]
+              }
+            }
+          }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="bg-[#ffe17c] dark:bg-yellow-400 text-black border-b-2 border-black w-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50">
+<div class="flex justify-between items-center px-6 py-4 w-full bg-[radial-gradient(#000_10%,transparent_10%)] bg-[length:32px_32px] bg-opacity-10">
+<div class="flex items-center gap-8">
+<div class="text-2xl font-black text-black flex items-center gap-2 font-['Space_Grotesk'] uppercase tracking-tight">
+<span class="material-symbols-outlined" data-icon="psychology" style="font-variation-settings: 'FILL' 1;">psychology</span>
+                    DocuMind AI
+                </div>
+<nav class="hidden md:flex gap-6 font-['Space_Grotesk'] font-bold uppercase tracking-tight">
+<a class="text-black/70 hover:translate-x-[2px] hover:translate-y-[2px] transition-all" href="#">Dashboard</a>
+<a class="border-b-2 border-black text-black pb-1" href="#">Documents</a>
+<a class="text-black/70 hover:translate-x-[2px] hover:translate-y-[2px] transition-all" href="#">Analysis</a>
+<a class="text-black/70 hover:translate-x-[2px] hover:translate-y-[2px] transition-all" href="#">Team</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden lg:flex items-center bg-white border-2 border-black px-3 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+<span class="material-symbols-outlined text-black text-sm" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-black placeholder-black/50 font-bold uppercase" placeholder="Search knowledge..." type="text"/>
+</div>
+<button class="bg-black text-white px-4 py-2 font-bold uppercase hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all">
+                    New Project
+                </button>
+<div class="flex gap-2">
+<span class="material-symbols-outlined cursor-pointer hover:scale-110" data-icon="bolt">bolt</span>
+<span class="material-symbols-outlined cursor-pointer hover:scale-110" data-icon="settings">settings</span>
+<span class="material-symbols-outlined cursor-pointer hover:scale-110" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<main class="flex flex-1 overflow-hidden h-[calc(100vh-76px)]">
+<!-- Left Side: SideNavBar -->
+<aside class="hidden lg:flex flex-col h-full w-64 bg-[#b7c6c2] dark:bg-gray-800 border-r-2 border-black shadow-[4px_0px_0px_0px_rgba(0,0,0,1)] p-4 gap-4 z-40">
+<div class="flex items-center gap-3 p-2">
+<div class="w-10 h-10 bg-[#ffe17c] border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center">
+<span class="material-symbols-outlined text-black" data-icon="description">description</span>
+</div>
+<div>
+<div class="font-black text-lg text-black uppercase font-['Space_Grotesk'] leading-none">ANNUAL_REPORT.PDF</div>
+<div class="text-xs font-bold text-black/60 uppercase">12.4 MB • 48 PAGES</div>
+</div>
+</div>
+<div class="flex flex-col gap-2 mt-4 font-['Space_Grotesk'] font-medium">
+<button class="flex items-center gap-3 p-3 text-black hover:bg-white/20 transition-all">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span>Home</span>
+</button>
+<button class="flex items-center gap-3 p-3 bg-[#ffe17c] border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold text-black">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+<span>My Library</span>
+</button>
+<button class="flex items-center gap-3 p-3 text-black hover:bg-white/20 transition-all">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Shared</span>
+</button>
+<button class="flex items-center gap-3 p-3 text-black hover:bg-white/20 transition-all">
+<span class="material-symbols-outlined" data-icon="psychology">psychology</span>
+<span>AI Assistant</span>
+</button>
+</div>
+<div class="mt-auto flex flex-col gap-2">
+<div class="bg-black text-white p-4 border-2 border-black shadow-[4px_4px_0px_0px_#ffe17c] mb-4">
+<div class="text-xs font-black uppercase mb-1">PRO ACCOUNT</div>
+<div class="text-sm font-medium">Unlimited PDF analysis and 4k context.</div>
+<button class="mt-3 w-full bg-[#ffe17c] text-black py-2 font-bold uppercase text-xs border-2 border-black">Upgrade to Pro</button>
+</div>
+<button class="flex items-center gap-3 p-2 text-black hover:bg-white/20 transition-all text-sm uppercase font-bold">
+<span class="material-symbols-outlined text-lg" data-icon="help">help</span>
+<span>Help</span>
+</button>
+<button class="flex items-center gap-3 p-2 text-black hover:bg-white/20 transition-all text-sm uppercase font-bold">
+<span class="material-symbols-outlined text-lg" data-icon="logout">logout</span>
+<span>Logout</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Area: Split View -->
+<div class="flex flex-1 overflow-hidden">
+<!-- Document Preview (Left) -->
+<section class="flex-1 bg-surface-container-low overflow-y-auto p-8 flex flex-col items-center">
+<div class="max-w-4xl w-full bg-white border-2 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] min-h-[1200px] p-12 relative">
+<!-- PDF Mock Content -->
+<div class="border-b-4 border-black pb-4 mb-8 flex justify-between items-end">
+<h1 class="font-h1 text-h1 text-black uppercase">Q4 Fiscal Performance</h1>
+<div class="text-right">
+<p class="font-bold text-black uppercase">DocuMind Corp</p>
+<p class="text-black/60">Page 1 of 48</p>
+</div>
+</div>
+<div class="space-y-6">
+<div class="bg-[#b7c6c2]/20 p-4 border-l-8 border-black">
+<h2 class="font-h3 text-h3 text-black mb-2 uppercase">1. Executive Summary</h2>
+<p class="font-body-lg text-black leading-relaxed">
+                                The fiscal year 2023 concluded with a significant surge in operational efficiency, primarily driven by our integration of autonomous processing units. Revenue grew by 24% year-over-year, totaling $450M in the final quarter.
+                            </p>
+</div>
+<img class="w-full h-64 object-cover border-2 border-black grayscale hover:grayscale-0 transition-all cursor-crosshair" data-alt="Professional business growth chart with sharp black lines and vibrant yellow accents in a clean minimalist report style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_T5Zzi2_I2zGHbCKMGHcveHH4D-gDWzJa4qYoGEEU7e8yeBJtVWRwv_p9Mr4TQtK4yQPHxjoVNa7Aw4QeBflA9jP7tug3-XE7RBDH1yp8Aw70UMJF86G7qrj4fOt2LvGJN-_AsVv-hp8zC1t2GTd7TpKjlSqXlu2vwda8MBkyv3kQXP8QabKrMyNiHUT4QzXbKcWypfl7JX_2VKIpgseH3C8yQqbrBXl-6zohyWN36Np78zfJ7OrLMgDLXtlW10LaWy0jvZNIiw"/>
+<p class="font-body-md text-black/80 leading-relaxed">
+                            Despite global headwinds, the strategic pivot to AI-first documentation workflows has reduced operational overhead by 15%. Our primary markets in the EU and North America showed the highest adoption rates of the 'MindStream' platform.
+                        </p>
+<div class="grid grid-cols-2 gap-8 py-8">
+<div class="border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<span class="block text-xs font-black uppercase text-black/40 mb-1">Key Growth</span>
+<span class="text-4xl font-black text-black tracking-tighter">24.2%</span>
+</div>
+<div class="border-2 border-black p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+<span class="block text-xs font-black uppercase text-black/40 mb-1">Efficiency Gain</span>
+<span class="text-4xl font-black text-black tracking-tighter">15.0%</span>
+</div>
+</div>
+<p class="font-body-md text-black/80 leading-relaxed">
+                            Future projections suggest that by Q2 2024, the full deployment of the semantic extraction layer will further optimize these results. Management remains confident in the continued expansion of the Enterprise segment.
+                        </p>
+</div>
+<!-- Highlight interaction layer -->
+<div class="absolute top-[20%] left-0 w-full h-[40px] bg-yellow-300/30 border-y border-black/20 pointer-events-none"></div>
+</div>
+</section>
+<!-- AI Chat Sidebar (Right) -->
+<section class="w-[450px] bg-white border-l-4 border-black flex flex-col shadow-[-8px_0px_0px_0px_rgba(0,0,0,0.1)] relative">
+<!-- Chat Header -->
+<div class="p-6 border-b-2 border-black bg-[#ffe17c] flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 bg-black flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-sm" data-icon="bolt">bolt</span>
+</div>
+<h3 class="font-h3 text-[20px] text-black uppercase tracking-tight">AI Analyst</h3>
+</div>
+<div class="flex gap-2">
+<button class="w-8 h-8 border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span>
+</button>
+<button class="w-8 h-8 border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="close">close</span>
+</button>
+</div>
+</div>
+<!-- Chat Messages Area -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6 bg-[radial-gradient(#000_1px,transparent_1px)] bg-[length:16px_16px] bg-opacity-5">
+<!-- AI Message -->
+<div class="flex flex-col items-start max-w-[90%]">
+<div class="bg-white border-2 border-black p-4 neo-shadow">
+<p class="text-black font-medium text-sm leading-relaxed">
+                                Hello! I've indexed **ANNUAL_REPORT.PDF**. You can ask me questions about revenue, regional growth, or efficiency metrics. How can I help today?
+                            </p>
+</div>
+</div>
+<!-- User Message -->
+<div class="flex flex-col items-end w-full">
+<div class="bg-black text-white border-2 border-black p-4 neo-shadow max-w-[90%]">
+<p class="font-bold text-sm">What were the key growth drivers for Q4?</p>
+</div>
+</div>
+<!-- AI Message with Citations -->
+<div class="flex flex-col items-start max-w-[90%]">
+<div class="bg-white border-2 border-black p-4 neo-shadow">
+<p class="text-black font-medium text-sm leading-relaxed mb-4">
+                                The primary driver was the **integration of autonomous processing units**, which contributed to a **24% year-over-year revenue growth**, totaling **$450M** for the quarter.
+                            </p>
+<div class="flex flex-wrap gap-2">
+<span class="bg-[#b7c6c2] border-2 border-black px-2 py-1 text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer hover:bg-[#ffe17c] transition-colors">
+<span class="material-symbols-outlined text-[12px]" data-icon="link">link</span>
+                                    Citation: Page 1
+                                </span>
+<span class="bg-[#b7c6c2] border-2 border-black px-2 py-1 text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer hover:bg-[#ffe17c] transition-colors">
+<span class="material-symbols-outlined text-[12px]" data-icon="link">link</span>
+                                    Citation: Page 12
+                                </span>
+</div>
+</div>
+</div>
+<!-- AI Message Analysis -->
+<div class="flex flex-col items-start max-w-[90%]">
+<div class="bg-white border-2 border-black p-4 neo-shadow">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-black" data-icon="analytics">analytics</span>
+<span class="text-xs font-black uppercase">Market Sentiment Analysis</span>
+</div>
+<div class="space-y-2">
+<div class="w-full bg-gray-200 h-2 border border-black">
+<div class="bg-[#ffe17c] h-full w-[85%] border-r border-black"></div>
+</div>
+<div class="flex justify-between text-[10px] font-bold uppercase">
+<span>Positive</span>
+<span>85% Confidence</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Chat Input -->
+<div class="p-6 bg-white border-t-4 border-black">
+<div class="relative">
+<div class="border-4 border-black p-1 bg-white flex items-center gap-2">
+<textarea class="flex-1 border-none focus:ring-0 text-black font-bold uppercase text-sm resize-none py-2 px-2" placeholder="Ask DocuMind AI..." rows="2"></textarea>
+<button class="bg-[#ffe17c] text-black w-14 h-14 border-2 border-black flex items-center justify-center neo-shadow hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all">
+<span class="material-symbols-outlined font-black" data-icon="send" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+<div class="mt-3 flex justify-between items-center">
+<div class="flex gap-4">
+<button class="flex items-center gap-1 text-[10px] font-black uppercase hover:text-[#786202]">
+<span class="material-symbols-outlined text-[14px]" data-icon="attach_file">attach_file</span> Attach
+                            </button>
+<button class="flex items-center gap-1 text-[10px] font-black uppercase hover:text-[#786202]">
+<span class="material-symbols-outlined text-[14px]" data-icon="mic">mic</span> Voice
+                            </button>
+</div>
+<span class="text-[10px] font-bold uppercase text-black/40">Enter to send</span>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-black border-t-2 border-black w-full mt-auto z-50">
+<div class="flex justify-between items-center px-8 py-4 w-full">
+<div class="font-['Space_Grotesk'] text-sm font-bold uppercase text-black dark:text-white">
+                © 2024 DocuMind AI. Built for the bold.
+            </div>
+<div class="flex gap-8 font-['Space_Grotesk'] text-sm font-bold uppercase">
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors duration-200" href="#">Privacy</a>
+<a class="opacity-80 underline decoration-2 decoration-[#ffe17c]" href="#">Terms</a>
+<a class="opacity-80 hover:text-[#ffe17c] transition-colors duration-200 flex items-center gap-2" href="#">
+<span class="w-2 h-2 bg-green-500 border border-black"></span>
+                    API Status
+                </a>
+</div>
+</div>
+</footer>
+</body></html>

@@ -1,0 +1,308 @@
+
+DocuMind AI
+Intelligent Document Assistant — Chrome Extension & RAG Chatbot
+Product Requirements Document  ·  Version 1.0  ·  2025
+
+Attribute	Detail
+Document Type	Product Requirements Document (PRD)
+Product Name	DocuMind AI
+Version	1.0
+Status	Draft — For Review
+Author	Product Team
+Date	2025
+Audience	Engineering, Design, Stakeholders
+
+Table of Contents
+
+
+
+1. Executive Summary
+DocuMind AI is a browser-native, AI-powered document intelligence layer that activates automatically when users open any document — PDFs, DOCX, PPTX, TXT, WPS, EPUB, and more — directly in their browser or via a companion web app. It eliminates the need to manually read through lengthy documents by instantly summarizing content and enabling natural-language querying against the document corpus.
+
+Users can ask questions like " What are the key obligations in Section 4?" or "Summarize the financial projections for Q3" and receive precise, cited answers — without ever scrolling through the document manually.
+
+🎯 Vision: Target outcome: Reduce average document review time by 70%, enabling professionals to extract critical insights in seconds rather than hours.
+
+2. Problem Statement
+2.1 The Core Pain
+Modern knowledge workers spend 30–40% of their working day reading and parsing documents — contracts, research papers, reports, policy manuals, meeting notes — much of it repetitive or irrelevant to their specific need. This results in:
+•Wasted hours reading documents to find one specific clause or data point
+•Missed insights buried deep in lengthy or complex files
+•Bottlenecks in decision-making because the right information is hard to surface quickly
+•Cognitive overload managing multiple document formats across different tools
+
+2.2 Existing Solutions Fall Short
+Current tools are inadequate:
+Tool	Limitation
+Ctrl+F / Find	Keyword-only; cannot answer questions or understand context
+Adobe Acrobat Summarize	Slow, one-shot summaries; no conversational follow-up
+ChatGPT file upload	Requires manual upload per session; no browser integration
+Notion AI	Works only within Notion; cannot read external documents
+Built-in OS viewers	No AI capabilities whatsoever
+
+3. Product Overview
+3.1 What DocuMind AI Is
+DocuMind AI is delivered in two complementary forms:
+•Chrome Extension: A sidebar-based assistant that auto-detects and processes documents open in the browser tab
+•Web App (RAG Portal): A standalone interface where users can upload and manage a personal document corpus for persistent, cross-document Q&A
+
+3.2 Supported Document Formats
+Category	Formats
+Office Documents	.docx, .doc, .pptx, .ppt, .xlsx, .xls, .wps, .odt, .odp, .ods
+PDF & eBooks	.pdf, .epub
+Plain Text	.txt, .md, .csv, .json, .yaml
+Web Content	HTML pages, web articles (via tab reading)
+Images with Text	.png, .jpg, .tiff (via OCR)
+Archives	.zip containing any of the above
+
+4. Goals & Success Metrics
+4.1 Business Goals
+1.Achieve 50,000 active Chrome Extension installs within 6 months of launch
+2.Reach a 4.5+ star rating on the Chrome Web Store
+3.Convert 15% of free users to paid tiers within 3 months
+4.Reduce average document comprehension time by ≥70% (validated via user studies)
+
+4.2 Key Performance Indicators (KPIs)
+KPI	Target	Measurement Method
+Daily Active Users (DAU)	10,000 within 3 months	Analytics dashboard
+Query Response Latency	< 2 seconds (P95)	Backend telemetry
+Summary Accuracy (ROUGE-L)	> 0.72	Automated eval suite
+User Retention (D30)	> 40%	Cohort analysis
+Net Promoter Score (NPS)	> 50	In-app survey
+Conversion Rate (Free → Pro)	> 15%	Billing analytics
+
+5. User Personas
+Persona	Description	Core Need
+Legal Professional	Associate reviewing 100-page contracts under time pressure	Extract obligations, dates, and risk clauses instantly
+Graduate Researcher	PhD student surveying 50+ academic papers	Synthesize findings across multiple documents
+Business Analyst	Analyst reviewing quarterly reports and board decks	Surface KPIs and trend data without reading every slide
+HR Manager	HR team processing policy documents and applications	Answer policy questions without hunting through manuals
+Student	Undergrad reviewing textbook chapters for exams	Get concise summaries and test-readiness answers
+Executive	C-suite with limited time reviewing briefing documents	Get the key points in 30 seconds
+
+6. Feature Requirements
+6.1 Core Features (MVP)
+F-01: Auto Document Detection
+When a user opens a supported document in their browser (e.g., navigates to a PDF URL or opens a .docx via Google Drive/OneDrive preview), the extension automatically detects the document type and renders a floating sidebar assistant.
+•Auto-detection triggers on: PDF MIME type, document file extensions in URL, embedded viewers (Google Docs, Office 365 Online)
+•Sidebar appears within 1 second of document load
+•Manual trigger available via extension icon for any tab
+
+F-02: Instant Document Summarization
+On detection (or user request), the system generates a tiered summary:
+•Executive Summary (3–5 sentences): The most critical takeaways
+•Section-by-Section Breakdown: Hierarchical summary matching the document structure
+•Key Entities Panel: People, dates, amounts, organizations, clauses auto-extracted and displayed as chips
+•Summary is generated within 3 seconds for documents up to 50 pages
+
+⚠️ Critical: Summaries must include inline citations (e.g., 'As stated on Page 4, Section 2.3...') to maintain auditability — a critical requirement for legal and compliance use cases.
+
+F-03: Conversational Q&A (RAG Engine)
+Users can ask free-form questions in natural language. The system retrieves relevant document chunks and generates grounded, cited answers.
+•Uses Retrieval-Augmented Generation (RAG) with semantic vector search over chunked document text
+•Every answer includes a source citation linking to the exact page/section
+•Multi-turn conversation: follow-up questions maintain context of prior turns
+•Fallback behavior: if the answer is not in the document, the system explicitly states so rather than hallucinating
+
+F-04: Multi-Document Corpus (Web App)
+In the web app, users can build a personal document library:
+•Drag-and-drop upload of multiple files
+•Organize documents into Projects/Folders
+•Cross-document Q&A: 'Across all contracts in my folder, which ones expire in 2026?'
+•Persistent vector store per user — documents remain indexed across sessions
+
+F-05: Export & Share
+•Export generated summaries as .PDF, .DOCX, or Markdown
+•Copy any answer to clipboard with one click
+•Share a summary link (web app only) with optional password protection
+
+6.2 Enhanced Features (Post-MVP)
+F-06: Smart Annotations
+Users can highlight passages in the document and the assistant will:
+•Explain the highlighted text in plain language
+•Translate it to another language (30+ languages supported via the LLM)
+•Suggest alternative phrasings or flag ambiguous legal language
+
+F-07: Comparative Analysis
+Upload two versions of a document (e.g., Contract v1 vs Contract v2) and receive:
+•Diff summary: what changed, what was added, what was removed
+•Risk delta: new risks introduced in the newer version
+
+F-08: Document Q&A Voice Mode
+•Users can speak questions via microphone (Web Speech API)
+•Answers are read aloud via text-to-speech
+•Useful for accessibility and hands-free workflows
+
+F-09: Smart Table & Chart Extraction
+•Automatically detects tables within PDFs/DOCX and renders them as interactive grids
+•Charts in PPT/PDF are described in text; underlying data is extracted if available
+•Data can be exported to .CSV or opened in a mini spreadsheet view
+
+F-10: Workflow Integrations
+Integration	Use Case
+Slack	Share summaries directly to a Slack channel
+Notion	Push summaries and Q&A answers to a Notion page
+Google Drive	Auto-index new files added to a designated Drive folder
+Email (Gmail)	Summarize PDF attachments within Gmail
+Zapier / Make	Trigger automation workflows when documents are processed
+
+F-11: Enterprise Admin Console
+•Centralized user management and SSO (SAML 2.0 / OIDC)
+•Audit logs: who queried what document, when
+•Data residency controls: choose regional storage (US, EU, India)
+•Custom AI model fine-tuning on internal document corpus
+
+7. Technical Architecture
+7.1 System Components — 100% Free Stack
+Free Stack: All tools below are free and open-source unless marked [Free Tier]. No paid subscriptions are required to build and launch the MVP.
+
+Component	Free Technology	Notes
+Chrome Extension (Frontend)	React + TypeScript + Manifest V3	100% free — open web standards
+Document Parser	PyMuPDF, python-docx, python-pptx, Tesseract OCR	All open-source, pip install
+Chunking + Embeddings	LangChain OSS + nomic-embed-text or all-MiniLM-L6-v2	Runs locally, zero API cost
+Vector Store	ChromaDB (dev) then Qdrant self-hosted (prod)	Both fully open-source
+LLM (Local)	Ollama + Mistral 7B / LLaMA 3 / Gemma 2	Runs on your machine, completely free
+LLM (Free API fallback)	Google Gemini 1.5 Flash [Free Tier] or Groq API [Free Tier]	Gemini: 1M tokens/day free; Groq: LLaMA 3 + Mistral
+Backend API	FastAPI (Python) on Railway.app or Render.com [Free Tier]	No credit card needed for free tier
+Web App Frontend	Next.js 14 + Tailwind CSS on Vercel [Free Tier]	Vercel free tier is generous for indie projects
+Auth	Supabase Auth [Free Tier] or NextAuth.js self-hosted	Supabase: 50,000 MAU free
+Database	Supabase PostgreSQL [Free Tier] or Neon.tech [Free Tier]	Both fully managed, zero ops
+File Storage	Supabase Storage [Free: 1GB] or Cloudflare R2 [Free: 10GB]	R2 has no egress fees — better long-term
+LLM Observability	Langfuse OSS self-hosted on Railway	Core product is open-source
+Infra Monitoring	Grafana + Prometheus (self-hosted)	Industry-standard, fully open-source
+Semantic Query Cache	Redis OSS (self-hosted) or Upstash Redis [Free Tier]	Cuts redundant LLM calls significantly
+
+Limits: Free tier ceilings: Supabase (500MB DB, 1GB storage, 50K MAU), Vercel (100GB bandwidth/month), Railway (500 hrs/month). Sufficient for MVP + early user validation.
+
+7.2 Free-to-Paid Upgrade Path
+Each upgrade is triggered by growth, is incremental, and requires no architectural changes:
+Component	Upgrade Trigger	Upgrade To (Cost)
+Vector DB	10,000+ documents indexed	Qdrant Cloud or Weaviate Cloud (pay-as-you-go)
+LLM	Groq/Gemini free tier rate limits hit	Groq paid ($0.05/1M tokens) — still very affordable
+Storage	Supabase 1GB exceeded	Cloudflare R2 ($0.015/GB) or Backblaze B2
+Backend Hosting	Railway 500hr/month cap hit	Railway Pro ($5/month) or Fly.io
+Auth/DB	50K MAU or 500MB DB approached	Supabase Pro ($25/month)
+
+7.3 RAG Pipeline Flow
+Pipeline: Document Upload/Detection → Text Extraction → Cleaning & Chunking (512 tokens, 64-token overlap) → Embedding Generation (local model) → Chroma/Qdrant Upsert → [Query Time] Semantic Search (Top-K=8) → Re-ranking → Context Assembly → Ollama/Gemini/Groq LLM Generation with Citations → Response Streaming
+
+7.4 Security Implementation — Phased Approach
+Security is implemented in three phases tied to product maturity. Front-loading all security work before MVP wastes engineering effort; delaying foundational items creates irreversible architectural debt. The split below is deliberate.
+
+Phase 1 — Build These on Day 1 (near-zero extra effort)
+Do Now: These items cost less than 1 day total to implement and are nearly impossible to retrofit cleanly later. Build them in from the start.
+
+Item	How to Implement	Why Now
+HTTPS / TLS everywhere	Automatic on Vercel, Railway, and Render — zero config	Retroactively enforcing HTTPS breaks existing integrations
+Never log document content	Set log level to exclude request bodies at FastAPI startup	Near impossible to audit and purge logs retroactively
+Secrets in environment variables	Use Railway/Render built-in env vars; never hardcode in source	A leaked API key in git history is permanent
+Supabase Row-Level Security (RLS)	One SQL policy per table: users can only read their own rows	Applying RLS to a populated database causes downtime
+Basic auth (Supabase Auth / NextAuth)	You need login anyway — build it correctly first time	Retrofitting auth means rewriting every API endpoint
+Input length limits on API endpoints	FastAPI request body size limit (e.g., 50MB max) + timeout	Prevents accidental or malicious resource exhaustion
+
+Phase 2 — Add After MVP (when you have real users)
+Post-MVP: Implement these once you have validated product-market fit and have real users whose data needs protecting. Estimated: 1–2 week sprint.
+
+Item	Tool / Approach
+Encryption at rest for document chunks	Supabase built-in encryption or application-level AES-256 via Python cryptography library (free)
+API rate limiting	slowapi (FastAPI middleware, free OSS) — prevent abuse of your free LLM tier quota
+Prompt injection defense	Strip/escape user inputs before LLM injection; add a content moderation prefix in the system prompt
+Document auto-deletion policy	Scheduled Supabase Edge Function to delete vectors + files older than N days (free)
+CORS policy hardening	Restrict origins to your extension ID and web app domain only
+Dependency vulnerability scanning	GitHub Dependabot (free) — enable in repo settings, takes 2 minutes
+
+Phase 3 — Enterprise-Only (when selling to large organisations)
+Enterprise-Only: Only build these when you have paying enterprise customers who explicitly require them. Building them earlier is waste.
+
+Item	Tool / Approach
+SSO / SAML 2.0 / OIDC	Supabase Pro + Auth0 or WorkOS (paid) — only needed for org-level login
+Audit logs (who read what, when)	Append-only Postgres table with user_id, document_id, action, timestamp — simple to build, needed for compliance
+SOC 2 Type II audit	Engage a third-party auditor — only relevant once enterprise contracts require it
+Data residency controls	Deploy Qdrant + Supabase in the required region (EU, US, India) — infra config, not code change
+On-premises / air-gapped deployment	Docker Compose bundle of all services — offer as Enterprise add-on
+GDPR / DPDP Act formal compliance	Privacy policy + DPA templates + data deletion API endpoint — legal effort, not engineering
+
+8. UX & Design Requirements
+8.1 Chrome Extension Sidebar
+•Sidebar width: 380px, collapsible to 40px icon strip
+•Sections: Summary tab | Chat tab | Entities tab | Export tab
+•Keyboard shortcut: Alt+D to toggle sidebar
+•Typing indicator (streaming response with blinking cursor)
+•Mobile: Not applicable for Chrome Extension; web app must be responsive
+
+8.2 Chat Interface
+•Message bubbles with user/assistant differentiation
+•Inline citations rendered as clickable chips that scroll the document to the referenced passage
+•Suggested follow-up questions shown after each answer
+•'Copy answer' and 'Thumbs up/down' feedback buttons per message
+
+8.3 Accessibility
+•WCAG 2.1 AA compliance
+•Full keyboard navigation
+•Screen reader support (ARIA labels throughout)
+•Minimum contrast ratio 4.5:1 for all text
+
+9. Monetization & Pricing
+Plan	Price	Key Limits	Target Segment
+Free	$0/month	20 queries/month, 5 documents, 10 MB/file	Students, casual users
+Pro	$12/month	Unlimited queries, 500 documents, 50 MB/file, voice mode, export	Individual professionals
+Team	$35/user/month	Everything in Pro + shared workspaces, admin console, priority support	Small teams (5–50 users)
+Enterprise	Custom	Unlimited + SSO, audit logs, custom model fine-tuning, on-prem option, SLA	Large orgs (50+ users)
+
+💡 Note: Additional revenue stream: API access tier for developers building on top of DocuMind's parsing and RAG infrastructure — priced per 1,000 tokens processed.
+
+10. Phased Roadmap
+Phase	Timeline	Deliverables	Security Work
+Phase 0: Foundation	Weeks 1-4	Tech spike: document parser, RAG pipeline prototype (Ollama + ChromaDB), Chrome Extension scaffold	HTTPS, secrets in env vars, never-log-content policy — all on Day 1
+Phase 1: MVP	Weeks 5-12	F-01 to F-05: auto-detection, summarization, Q&A, multi-doc web app, export. Free stack: Gemini/Groq API, Supabase, Vercel, Railway	Supabase RLS, basic auth, input length limits
+Phase 2: Growth	Weeks 13-20	F-06 to F-08: annotations, comparison, voice mode; Pro/Team billing (Stripe)	Encryption at rest, rate limiting, prompt injection defense, auto-deletion policy, Dependabot
+Phase 3: Enterprise	Weeks 21-30	F-09 to F-11: integrations, admin console, enterprise contracts. Begin paid tier upgrades as needed	SSO/SAML, audit logs, SOC 2 audit kickoff, data residency options
+Phase 4: Expansion	Weeks 31+	Mobile app (iOS/Android), API marketplace, vertical fine-tunes (Legal, Medical), on-prem Docker bundle	Full GDPR/DPDP compliance, on-premises deployment, DPA templates
+
+11. Risks & Mitigations
+Risk	Likelihood	Impact	Mitigation
+LLM hallucination on cited answers	Medium	High	Constrain generation to retrieved context only; implement fact-grounding eval suite; show 'I don't know' fallback
+Chrome Manifest V3 restrictions on content scripts	High	Medium	Design document parsing to run in background service worker; use offscreen documents API for heavy processing
+Large file performance (100+ page PDFs)	High	Medium	Stream chunked processing with progress indicator; async indexing; lazy-load vector search
+User data privacy concerns	Medium	High	Publish clear data handling policy; offer client-side processing mode for sensitive documents (local LLM via Ollama)
+LLM API cost at scale	Medium	Medium	Primary path is Ollama (local, free). Fallback to Gemini 1.5 Flash (1M tokens/day free) or Groq (free tier). Semantic Redis cache reduces calls further. Paid LLM only needed at significant scale.
+Browser compatibility (non-Chrome)	Low	Medium	MVP is Chrome-first; Firefox extension planned for Phase 3 using WebExtensions API compatibility layer
+
+12. Non-Functional Requirements
+Category	Requirement
+Performance	P95 query latency ≤ 2s; initial document summary ≤ 5s for 50-page documents; extension load time < 200ms
+Scalability	Backend scales to 100,000 concurrent sessions; auto-scale on AWS ECS with target tracking policies
+Availability	99.5% uptime SLA (Pro); 99.9% SLA (Enterprise); max planned downtime 4 hours/month
+Data Retention	Free tier: documents deleted after 7 days of inactivity; Pro: 12 months; Enterprise: configurable
+Compliance	GDPR (EU users), CCPA (California), DPDP Act 2023 (India), SOC 2 Type II (within 18 months of launch)
+Localization	UI in English (launch); Hindi, Spanish, French, German, Japanese (Phase 3); LLM Q&A answers in user's query language automatically
+
+13. Open Questions & Decisions Needed
+5.Client-side vs. server-side processing: For highly sensitive enterprise users, should we build a local processing mode (e.g., integrate with Ollama running locally)? This would eliminate data leaving the device. Recommended: yes — Ollama is already in the stack, so a 'local mode' toggle is low effort.
+6.Embedding model selection: nomic-embed-text (higher quality, needs more RAM) vs. all-MiniLM-L6-v2 (lighter, faster) — run an eval on a sample corpus to pick the right default for target hardware.
+7.Gemini vs. Groq as the free API fallback: Gemini 1.5 Flash has higher context window (1M tokens); Groq is faster (250 tokens/sec). Decision: use Groq for chat Q&A (speed matters), Gemini for full-document summarization (context window matters).
+8.Offline support: Should the Chrome Extension cache summaries and allow re-querying offline? Requires local vector store (IndexedDB + WASM-based embedding model like transformers.js).
+9.INR pricing for Indian market: Given the student and SMB target segment in India, consider offering a lower-priced INR tier (~Rs 299/month for Pro) to drive adoption in the home market first.
+
+14. Appendix
+14.1 Competitive Landscape
+Competitor	Strengths	Weaknesses vs. DocuMind AI
+ChatPDF	Simple PDF chat	PDF-only; no browser integration; no multi-doc corpus
+Humata AI	Good for research papers	No Chrome extension; no annotation; limited formats
+Adobe AI Assistant	Deep PDF integration	Requires Adobe subscription; expensive; no DOCX/PPT support
+Copilot (Microsoft)	Deep Office 365 integration	Requires M365 license; no cross-format support outside Office
+NotebookLM (Google)	Excellent multi-source synthesis	No browser extension; no PDF annotation; web app only
+
+14.2 Glossary
+•RAG: Retrieval-Augmented Generation — relevant document chunks are fetched and injected into an LLM prompt to generate grounded, cited answers
+•Vector Embedding: A numerical representation of text capturing semantic meaning, enabling similarity-based search
+•Chunking: Splitting a document into overlapping segments of fixed token length for efficient retrieval
+•Semantic Cache: Stores prior LLM query results and retrieves them for semantically similar (not just identical) future queries — reduces API calls
+•Ollama: Open-source tool for running LLMs locally on your own machine — completely free, no API key needed
+•ChromaDB: Open-source vector database that runs embedded in Python — ideal for development and small-scale production
+•Qdrant: Open-source vector database with a self-hosted server mode — better performance at scale than Chroma
+•Sentence Transformers: Python library for generating text embeddings locally using models like all-MiniLM-L6-v2 — no API cost
+•MV3: Chrome Manifest Version 3 — the current extension platform with stricter security and performance rules
+•RLS: Row-Level Security — a Postgres/Supabase feature ensuring users can only access their own rows in the database
+
+📋 Document Status: This PRD is a living document. All sections are subject to revision following stakeholder reviews, user research, and technical feasibility assessments. Next review: Sprint Planning — Week 2.

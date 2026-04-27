@@ -1,0 +1,30 @@
+DocuMind AI — Tech Stack Document
+1. Architectural Layers
+L1 — AI / LLM Core: RAG, embeddings, inference
+L2 — Backend API: query handling, orchestration
+L3 — Frontend: Chrome Extension + Web App
+L4 — Data & Storage: documents, vectors, metadata
+L5 — DevOps / Infra: deployment, monitoring, caching
+2. Master Tech Stack
+L1 — AI / LLM Core
+Python 3.11+, Ollama (Mistral 7B, LLaMA 3, Gemma 2), Gemini 1.5 Flash, Groq, LangChain, Sentence Transformers
+L2 — Backend API
+FastAPI, Uvicorn, Pydantic, Celery + Redis (optional)
+L3 — Frontend
+React + TypeScript (Chrome Extension, MV3), Next.js 14, Tailwind CSS, Axios
+L4 — Data & Storage
+ChromaDB (dev), Qdrant (prod), Supabase PostgreSQL, Supabase Auth / NextAuth, Supabase Storage, Cloudflare R2
+L5 — Document Processing
+PyMuPDF, python-docx, python-pptx, Tesseract OCR
+L6 — DevOps & Infra
+Vercel, Railway/Render, Redis/Upstash, Grafana, Prometheus, Langfuse, GitHub
+3. Tier Classification
+Core — Required for MVP
+Recommended — Improves performance/scalability
+Advanced — Production/enterprise features
+4. Key Design Choices
+RAG architecture for document Q&A
+Local LLM via Ollama for cost efficiency
+Qdrant for scalable vector search
+FastAPI for high-performance backend
+Next.js + React for unified frontend

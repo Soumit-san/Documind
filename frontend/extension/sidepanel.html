@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DocuMind AI</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="dm-header">
+      <h1 class="dm-logo">DOCUMIND<span class="dm-logo-accent">AI</span></h1>
+      <nav class="dm-tabs" role="tablist">
+        <button class="dm-tab dm-tab--active" data-tab="summary" role="tab" aria-selected="true">Summary</button>
+        <button class="dm-tab" data-tab="chat" role="tab" aria-selected="false">Chat</button>
+        <button class="dm-tab" data-tab="entities" role="tab" aria-selected="false">Entities</button>
+        <button class="dm-tab" data-tab="export" role="tab" aria-selected="false">Export</button>
+      </nav>
+    </header>
+
+    <!-- Summary Panel -->
+    <section id="panel-summary" class="dm-panel dm-panel--active" role="tabpanel">
+      <div class="dm-card">
+        <h2 class="dm-card__title">EXECUTIVE SUMMARY</h2>
+        <div class="dm-card__body">
+          <p class="dm-placeholder">Open a document to see its summary here.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chat Panel -->
+    <section id="panel-chat" class="dm-panel" role="tabpanel" hidden>
+      <div class="dm-chat">
+        <div class="dm-chat__messages" id="chat-messages">
+          <div class="dm-message dm-message--assistant">
+            <p>Hi! I'm DocuMind AI. Ask me anything about your document.</p>
+          </div>
+        </div>
+        <form class="dm-chat__input-row" id="chat-form">
+          <input type="text" class="dm-input" id="chat-input" placeholder="Ask a question..." autocomplete="off" />
+          <button type="submit" class="dm-btn dm-btn--primary">ASK</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Entities Panel -->
+    <section id="panel-entities" class="dm-panel" role="tabpanel" hidden>
+      <div class="dm-card">
+        <h2 class="dm-card__title">KEY ENTITIES</h2>
+        <div class="dm-card__body">
+          <p class="dm-placeholder">Entities will appear here after processing.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Export Panel -->
+    <section id="panel-export" class="dm-panel" role="tabpanel" hidden>
+      <div class="dm-card">
+        <h2 class="dm-card__title">EXPORT</h2>
+        <div class="dm-card__body dm-export-options">
+          <button class="dm-btn dm-btn--secondary">Export as PDF</button>
+          <button class="dm-btn dm-btn--secondary">Export as DOCX</button>
+          <button class="dm-btn dm-btn--secondary">Copy as Markdown</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
