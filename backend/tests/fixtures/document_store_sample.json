@@ -1,0 +1,13 @@
+{
+  "test123hash456": {
+    "text": "This is a sample document text containing no PII. It is used as a test fixture for the document store.",
+    "pages": [
+      "This is a sample document text containing no PII. It is used as a test fixture for the document store."
+    ],
+    "metadata": {
+      "filename": "sample.pdf",
+      "file_type": "pdf",
+      "page_count": 1
+    }
+  }
+}
