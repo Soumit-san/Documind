@@ -4,67 +4,207 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DocuMind AI</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" />
   <link rel="stylesheet" href="sidepanel.css" />
 </head>
 <body>
   <div id="app">
-    <!-- Header -->
+
+    <!-- ─── Header (Gold bar with dot pattern) ─── -->
     <header class="dm-header">
-      <h1 class="dm-logo">DOCUMIND<span class="dm-logo-accent">AI</span></h1>
+      <div class="dm-header__top">
+        <div class="dm-header__brand">
+          <span class="material-symbols-outlined dm-header__icon">psychology</span>
+          <h1 class="dm-logo">DOCUMIND<span class="dm-logo-accent">AI</span></h1>
+        </div>
+        <div class="dm-header__actions">
+          <button class="dm-icon-btn" id="btn-settings" title="Settings">
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
       <nav class="dm-tabs" role="tablist">
-        <button class="dm-tab dm-tab--active" data-tab="summary" role="tab" aria-selected="true">Summary</button>
-        <button class="dm-tab" data-tab="chat" role="tab" aria-selected="false">Chat</button>
-        <button class="dm-tab" data-tab="entities" role="tab" aria-selected="false">Entities</button>
-        <button class="dm-tab" data-tab="export" role="tab" aria-selected="false">Export</button>
+        <button class="dm-tab dm-tab--active" data-tab="summary" role="tab" aria-selected="true">
+          <span class="material-symbols-outlined">description</span>
+          Summary
+        </button>
+        <button class="dm-tab" data-tab="chat" role="tab" aria-selected="false">
+          <span class="material-symbols-outlined">chat</span>
+          Chat
+        </button>
+        <button class="dm-tab" data-tab="entities" role="tab" aria-selected="false">
+          <span class="material-symbols-outlined">label</span>
+          Entities
+        </button>
+        <button class="dm-tab" data-tab="export" role="tab" aria-selected="false">
+          <span class="material-symbols-outlined">ios_share</span>
+          Export
+        </button>
       </nav>
     </header>
 
-    <!-- Summary Panel -->
+    <!-- ─── Summary Panel ─── -->
     <section id="panel-summary" class="dm-panel dm-panel--active" role="tabpanel">
-      <div class="dm-card">
-        <h2 class="dm-card__title">EXECUTIVE SUMMARY</h2>
-        <div class="dm-card__body">
-          <p class="dm-placeholder">Open a document to see its summary here.</p>
+      <!-- Status bar -->
+      <div id="doc-status" class="dm-status dm-status--idle">
+        <span class="material-symbols-outlined dm-status__icon">search</span>
+        <span class="dm-status__text">Waiting for document…</span>
+      </div>
+
+      <!-- Key Takeaways -->
+      <div class="dm-section">
+        <div class="dm-section__header">
+          <h3 class="dm-section__title">KEY TAKEAWAYS</h3>
+          <span class="dm-badge dm-badge--ai" id="badge-analyzed" style="display:none;">AI ANALYZED</span>
         </div>
+        
+        <!-- Loading Skeleton -->
+        <div id="summary-skeleton" class="dm-skeleton" style="display:none;">
+          <div class="dm-skeleton__line"></div>
+          <div class="dm-skeleton__line dm-skeleton__line--short"></div>
+          <div class="dm-skeleton__line"></div>
+        </div>
+
+        <div id="summary-takeaways" class="dm-takeaways">
+          <div class="dm-empty-state">
+            <span class="material-symbols-outlined dm-empty-state__icon">article</span>
+            <p>Open a document to see its AI-generated summary here.</p>
+          </div>
+        </div>
+        
+        <button id="btn-analyze" class="dm-btn dm-btn--primary" style="display:none; width:100%; margin-top:16px;">
+          <span class="material-symbols-outlined">psychology</span> Analyze Document
+        </button>
+      </div>
+
+      <!-- Section Breakdown -->
+      <div class="dm-section" id="section-breakdown-container" style="display:none;">
+        <h3 class="dm-section__title">SECTION BREAKDOWN</h3>
+        <div id="section-breakdown" class="dm-accordion-group">
+          <!-- Accordions go here -->
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="dm-section">
+        <h3 class="dm-section__title">QUICK ACTIONS</h3>
+        <div class="dm-quick-actions">
+          <button class="dm-action-btn" id="btn-copy-summary">
+            <span class="material-symbols-outlined">content_copy</span>
+            Copy Summary
+          </button>
+          <button class="dm-action-btn dm-action-btn--outline" id="btn-export-summary">
+            <span class="material-symbols-outlined">ios_share</span>
+            Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Document Context Card -->
+      <div id="doc-context" class="dm-context-card" style="display:none;">
+        <div class="dm-context-card__url">
+          <span class="material-symbols-outlined">link</span>
+          <span id="doc-url-display" class="dm-context-card__url-text">—</span>
+        </div>
+        <div class="dm-progress-bar">
+          <div class="dm-progress-bar__fill" id="analysis-progress" style="width:0%"></div>
+        </div>
+        <p class="dm-context-card__label" id="analysis-label">Analysis: Waiting…</p>
       </div>
     </section>
 
-    <!-- Chat Panel -->
+    <!-- ─── Chat Panel ─── -->
     <section id="panel-chat" class="dm-panel" role="tabpanel" hidden>
       <div class="dm-chat">
         <div class="dm-chat__messages" id="chat-messages">
           <div class="dm-message dm-message--assistant">
-            <p>Hi! I'm DocuMind AI. Ask me anything about your document.</p>
+            <div class="dm-message__avatar">
+              <span class="material-symbols-outlined">psychology</span>
+            </div>
+            <div class="dm-message__content">
+              <p>Hi! I'm DocuMind AI. Open a document and ask me anything about it.</p>
+            </div>
           </div>
         </div>
-        <form class="dm-chat__input-row" id="chat-form">
-          <input type="text" class="dm-input" id="chat-input" placeholder="Ask a question..." autocomplete="off" />
-          <button type="submit" class="dm-btn dm-btn--primary">ASK</button>
-        </form>
       </div>
     </section>
 
-    <!-- Entities Panel -->
+    <!-- ─── Entities Panel ─── -->
     <section id="panel-entities" class="dm-panel" role="tabpanel" hidden>
-      <div class="dm-card">
-        <h2 class="dm-card__title">KEY ENTITIES</h2>
-        <div class="dm-card__body">
-          <p class="dm-placeholder">Entities will appear here after processing.</p>
+      <div class="dm-section">
+        <div class="dm-section__header">
+          <h3 class="dm-section__title">KEY ENTITIES</h3>
+          <span class="dm-badge dm-badge--ai" id="badge-entities" style="display:none;">EXTRACTED</span>
+        </div>
+        <div id="entities-list" class="dm-entities">
+          <div class="dm-empty-state">
+            <span class="material-symbols-outlined dm-empty-state__icon">person_search</span>
+            <p>Entities (people, dates, amounts, organizations) will appear here after analysis.</p>
+          </div>
+        </div>
+        
+        <div id="entities-container" style="display:none; display:flex; flex-direction:column; gap:16px;">
+          <div class="dm-entity-group">
+            <h4 class="dm-entity-group__title">PEOPLE & ORGS</h4>
+            <div class="dm-entity-group__chips" id="entities-people"></div>
+          </div>
+          <div class="dm-entity-group">
+            <h4 class="dm-entity-group__title">DATES & AMOUNTS</h4>
+            <div class="dm-entity-group__chips" id="entities-dates"></div>
+          </div>
+          <div class="dm-entity-group">
+            <h4 class="dm-entity-group__title">KEY TERMS</h4>
+            <div class="dm-entity-group__chips" id="entities-terms"></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Export Panel -->
+    <!-- ─── Export Panel ─── -->
     <section id="panel-export" class="dm-panel" role="tabpanel" hidden>
-      <div class="dm-card">
-        <h2 class="dm-card__title">EXPORT</h2>
-        <div class="dm-card__body dm-export-options">
-          <button class="dm-btn dm-btn--secondary">Export as PDF</button>
-          <button class="dm-btn dm-btn--secondary">Export as DOCX</button>
-          <button class="dm-btn dm-btn--secondary">Copy as Markdown</button>
+      <div class="dm-section">
+        <h3 class="dm-section__title">EXPORT OPTIONS</h3>
+        <div class="dm-export-grid">
+          <button class="dm-export-btn">
+            <span class="material-symbols-outlined">picture_as_pdf</span>
+            <span>PDF</span>
+          </button>
+          <button class="dm-export-btn">
+            <span class="material-symbols-outlined">description</span>
+            <span>DOCX</span>
+          </button>
+          <button class="dm-export-btn">
+            <span class="material-symbols-outlined">code</span>
+            <span>Markdown</span>
+          </button>
+          <button class="dm-export-btn">
+            <span class="material-symbols-outlined">content_copy</span>
+            <span>Clipboard</span>
+          </button>
         </div>
       </div>
     </section>
+
+    <!-- ─── Persistent Bottom Chat Input ─── -->
+    <footer class="dm-footer">
+      <form class="dm-footer__form" id="chat-form">
+        <input
+          type="text"
+          class="dm-footer__input"
+          id="chat-input"
+          placeholder="Ask anything about this doc..."
+          autocomplete="off"
+        />
+        <button type="submit" class="dm-footer__send" title="Send">
+          <span class="material-symbols-outlined">arrow_forward</span>
+        </button>
+      </form>
+      <div class="dm-footer__meta">
+        <span class="dm-footer__version">DocuMind AI v0.1.0</span>
+      </div>
+    </footer>
   </div>
 
   <script src="sidepanel.js"></script>

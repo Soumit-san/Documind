@@ -27,6 +27,10 @@ class Settings(BaseSettings):
 
     # --- Ollama ---
     ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "mistral"
+
+    # --- Groq ---
+    groq_model: str = "llama-3.3-70b-versatile"
 
     @property
     def cors_origin_list(self) -> list[str]:
