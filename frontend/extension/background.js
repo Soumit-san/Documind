@@ -182,7 +182,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         source_type: data.type,
       }),
     })
-    .then(r => r.json())
+    .then(async r => {
+      const result = await r.json().catch(() => ({}));
+      if (!r.ok || !result.document_id) {
+        throw new Error(result.detail || 'Upload failed or missing document_id');
+      }
+      return result;
+    })
     .then(result => {
       console.log('[DocuMind BG] Text indexed:', result);
       data.document_id = result.document_id;
@@ -201,10 +207,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     })
     .catch(err => {
       console.error('[DocuMind BG] Text upload failed:', err);
-      data.detected = true;
       data.upload_error = err.toString();
-      tabDocState.set(tabId, data);
-      handleDocumentDetected(tabId, data);
+      
+      // Notify sidepanel immediately of error
+      chrome.runtime.sendMessage({
+        type: 'DOCUMENT_READY',
+        data: data,
+      }).catch(() => {});
     });
 
     sendResponse({ status: 'processing' });

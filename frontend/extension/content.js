@@ -203,6 +203,7 @@
   }
 
   // ─── Main Init ────────────────────────────────────────────────
+  let documentSent = false;
 
   function init() {
     const detection = detectDocument();
@@ -214,10 +215,14 @@
     const extractionDelay = detection.type.startsWith('google') ? 3000 : 500;
 
     setTimeout(() => {
+      if (documentSent) return;
+      
       const text = extractText(detection);
 
       if (text && text.length >= 30) {
         console.log(`[DocuMind] 📝 Extracted ${text.length} chars of text via DOM`);
+        documentSent = true;
+        if (typeof observer !== 'undefined') observer.disconnect();
         // Send both detection data AND the extracted text
         chrome.runtime.sendMessage({
           type: 'DOCUMENT_WITH_TEXT',
@@ -227,6 +232,8 @@
         });
       } else {
         console.log('[DocuMind] ⚠️ Could not extract text, sending detection only');
+        documentSent = true;
+        if (typeof observer !== 'undefined') observer.disconnect();
         chrome.runtime.sendMessage({
           type: 'DOCUMENT_DETECTED',
           data: detection,
@@ -244,13 +251,19 @@
 
   // MutationObserver for late-loading SPAs
   const observer = new MutationObserver(() => {
+    if (documentSent) {
+      observer.disconnect();
+      return;
+    }
     const detection = detectDocument();
     if (detection) {
       observer.disconnect();
       console.log('[DocuMind] 📄 Late detection via MutationObserver:', detection.type);
       setTimeout(() => {
+        if (documentSent) return;
         const text = extractText(detection);
         if (text && text.length >= 30) {
+          documentSent = true;
           chrome.runtime.sendMessage({
             type: 'DOCUMENT_WITH_TEXT',
             data: detection,
@@ -258,6 +271,7 @@
             title: document.title || detection.url,
           });
         } else {
+          documentSent = true;
           chrome.runtime.sendMessage({
             type: 'DOCUMENT_DETECTED',
             data: detection,

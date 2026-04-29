@@ -6,7 +6,13 @@
 (() => {
   'use strict';
 
-  const API_BASE = 'http://127.0.0.1:8000/api';
+  let API_BASE = 'http://127.0.0.1:8000/api';
+  let APP_URL = 'http://localhost:3000';
+
+  chrome.storage.local.get(['apiBaseUrl', 'appUrl'], (result) => {
+    if (result.apiBaseUrl) API_BASE = result.apiBaseUrl;
+    if (result.appUrl) APP_URL = result.appUrl;
+  });
 
   // ─── DOM References ─────────────────────────────────────────
   const tabs = document.querySelectorAll('.dm-tab');
@@ -105,10 +111,17 @@
       if (!sentence.trim()) return;
       const card = document.createElement('div');
       card.className = 'dm-takeaway';
-      card.innerHTML = `
-        <span class="dm-takeaway__number">${String(i + 1).padStart(2, '0')}</span>
-        <p class="dm-takeaway__text">${sentence.trim()}</p>
-      `;
+
+      const numSpan = document.createElement('span');
+      numSpan.className = 'dm-takeaway__number';
+      numSpan.textContent = String(i + 1).padStart(2, '0');
+
+      const textP = document.createElement('p');
+      textP.className = 'dm-takeaway__text';
+      textP.textContent = sentence.trim();
+
+      card.appendChild(numSpan);
+      card.appendChild(textP);
       summaryTakeaways.appendChild(card);
     });
 
@@ -124,18 +137,32 @@
     sections.forEach(sec => {
       const el = document.createElement('div');
       el.className = 'dm-accordion';
-      el.innerHTML = `
-        <button class="dm-accordion__header">
-          ${sec.title}
-          <span class="material-symbols-outlined">expand_more</span>
-        </button>
-        <div class="dm-accordion__content">
-          <p>${sec.summary}</p>
-          ${sec.page ? `<span class="dm-entity-chip">(Page ${sec.page})</span>` : ''}
-        </div>
-      `;
+      
+      const btn = document.createElement('button');
+      btn.className = 'dm-accordion__header';
+      btn.textContent = sec.title;
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'material-symbols-outlined';
+      iconSpan.textContent = 'expand_more';
+      btn.appendChild(iconSpan);
+      
+      const content = document.createElement('div');
+      content.className = 'dm-accordion__content';
+      const p = document.createElement('p');
+      p.textContent = sec.summary;
+      content.appendChild(p);
+      
+      if (sec.page) {
+        const pageSpan = document.createElement('span');
+        pageSpan.className = 'dm-entity-chip';
+        pageSpan.textContent = `(Page ${sec.page})`;
+        content.appendChild(pageSpan);
+      }
+      
+      el.appendChild(btn);
+      el.appendChild(content);
+
       // Toggle logic
-      const btn = el.querySelector('.dm-accordion__header');
       btn.addEventListener('click', () => el.classList.toggle('dm-accordion--open'));
       sectionBreakdown.appendChild(el);
     });
@@ -149,8 +176,20 @@
 
     const renderChips = (container, items) => {
       if (!container) return;
-      container.innerHTML = (items || []).map(i => `<span class="dm-entity-chip">${i}</span>`).join('');
-      if (!items || items.length === 0) container.innerHTML = '<span style="color:var(--text-tertiary);">None found</span>';
+      container.innerHTML = '';
+      if (!items || items.length === 0) {
+        const span = document.createElement('span');
+        span.style.color = 'var(--text-tertiary)';
+        span.textContent = 'None found';
+        container.appendChild(span);
+        return;
+      }
+      items.forEach(i => {
+        const chip = document.createElement('span');
+        chip.className = 'dm-entity-chip';
+        chip.textContent = i;
+        container.appendChild(chip);
+      });
     };
 
     const e = entityData.entities || {};
@@ -196,15 +235,17 @@
       if (summarySkeleton) summarySkeleton.style.display = 'none';
       if (summaryTakeaways) {
         summaryTakeaways.style.display = 'block';
-        summaryTakeaways.innerHTML = `
-          <div class="dm-error-card">
-            <span class="material-symbols-outlined">error</span>
-            <div>
-              <p style="font-weight:700;">Analysis Failed</p>
-              <p style="font-size:12px;">Could not connect to DocuMind AI backend or LLM.</p>
-            </div>
+        summaryTakeaways.innerHTML = '';
+        const errCard = document.createElement('div');
+        errCard.className = 'dm-error-card';
+        errCard.innerHTML = `
+          <span class="material-symbols-outlined">error</span>
+          <div>
+            <p style="font-weight:700;">Analysis Failed</p>
+            <p style="font-size:12px;">Could not connect to DocuMind AI backend or LLM.</p>
           </div>
         `;
+        summaryTakeaways.appendChild(errCard);
       }
       setProgress(0, 'Analysis: Failed');
       setStatus('idle', 'Failed to analyze document', 'error');
@@ -238,15 +279,17 @@
       setProgress(0, 'Upload failed');
       if (summaryTakeaways) {
         summaryTakeaways.style.display = 'block';
-        summaryTakeaways.innerHTML = `
-          <div class="dm-error-card">
-            <span class="material-symbols-outlined">error</span>
-            <div>
-              <p style="font-weight:700;">Text Extraction Failed</p>
-              <p style="font-size:12px;">Could not extract readable text from this page. Try uploading the file directly via the <a href="http://localhost:3000/dashboard" target="_blank" style="color:inherit;font-weight:700;">DocuMind Web App</a>.</p>
-            </div>
+        summaryTakeaways.innerHTML = '';
+        const errCard = document.createElement('div');
+        errCard.className = 'dm-error-card';
+        errCard.innerHTML = `
+          <span class="material-symbols-outlined">error</span>
+          <div>
+            <p style="font-weight:700;">Text Extraction Failed</p>
+            <p style="font-size:12px;">Could not extract readable text from this page. Try uploading the file directly via the <a href="${APP_URL}/dashboard" target="_blank" style="color:inherit;font-weight:700;">DocuMind Web App</a>.</p>
           </div>
         `;
+        summaryTakeaways.appendChild(errCard);
       }
       if (btnAnalyze) btnAnalyze.style.display = 'none';
       return;
@@ -263,15 +306,17 @@
         setProgress(0, 'Timed out');
         if (summaryTakeaways) {
           summaryTakeaways.style.display = 'block';
-          summaryTakeaways.innerHTML = `
-            <div class="dm-error-card">
-              <span class="material-symbols-outlined">error</span>
-              <div>
-                <p style="font-weight:700;">Processing Timed Out</p>
-                <p style="font-size:12px;">Make sure the backend is running at 127.0.0.1:8000. You can also try uploading directly via the <a href="http://localhost:3000/dashboard" target="_blank" style="color:inherit;font-weight:700;">Web App</a>.</p>
-              </div>
+          summaryTakeaways.innerHTML = '';
+          const errCard = document.createElement('div');
+          errCard.className = 'dm-error-card';
+          errCard.innerHTML = `
+            <span class="material-symbols-outlined">error</span>
+            <div>
+              <p style="font-weight:700;">Processing Timed Out</p>
+              <p style="font-size:12px;">Make sure the backend is running at 127.0.0.1:8000. You can also try uploading directly via the <a href="${APP_URL}/dashboard" target="_blank" style="color:inherit;font-weight:700;">Web App</a>.</p>
             </div>
           `;
+          summaryTakeaways.appendChild(errCard);
         }
       }
     }, 60000);
@@ -284,15 +329,20 @@
     const div = document.createElement('div');
     div.className = `dm-message dm-message--${role}`;
 
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'dm-message__content';
+    const p = document.createElement('p');
+    p.textContent = content;
+    contentDiv.appendChild(p);
+
     if (role === 'assistant') {
-      div.innerHTML = `
-        <div class="dm-message__avatar">
-          <span class="material-symbols-outlined">psychology</span>
-        </div>
-        <div class="dm-message__content"><p>${content}</p></div>
-      `;
+      const avatar = document.createElement('div');
+      avatar.className = 'dm-message__avatar';
+      avatar.innerHTML = '<span class="material-symbols-outlined">psychology</span>';
+      div.appendChild(avatar);
+      div.appendChild(contentDiv);
     } else {
-      div.innerHTML = `<div class="dm-message__content"><p>${content}</p></div>`;
+      div.appendChild(contentDiv);
     }
 
     chatMessages?.appendChild(div);
@@ -343,9 +393,15 @@
       if (data.citations?.length) {
         const citDiv = document.createElement('div');
         citDiv.style.padding = '0 12px 8px 40px';
-        citDiv.innerHTML = data.citations
-          .map(c => `<span class="dm-entity-chip">${c.section || (c.page ? 'Page ' + c.page : 'Source')}</span>`)
-          .join(' ');
+        
+        data.citations.forEach(c => {
+          const chip = document.createElement('span');
+          chip.className = 'dm-entity-chip';
+          chip.textContent = c.section || (c.page ? 'Page ' + c.page : 'Source');
+          citDiv.appendChild(chip);
+          citDiv.appendChild(document.createTextNode(' '));
+        });
+        
         chatMessages?.appendChild(citDiv);
       }
 
