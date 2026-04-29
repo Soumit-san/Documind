@@ -42,10 +42,17 @@ def create_app() -> FastAPI:
     )
 
     # --- CORS -----------------------------------------------------------
+    # In development, allow all origins so the Chrome extension
+    # (chrome-extension://<id>) can reach the local backend.
+    # In production, lock this to specific origins via CORS_ORIGINS env var.
+    cors_origins = settings.cors_origin_list
+    if settings.app_env == "development":
+        cors_origins = ["*"]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origin_list,
-        allow_credentials=True,
+        allow_origins=cors_origins,
+        allow_credentials=cors_origins != ["*"],  # credentials not allowed with wildcard
         allow_methods=["*"],
         allow_headers=["*"],
     )

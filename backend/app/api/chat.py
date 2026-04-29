@@ -7,7 +7,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from app.services.rag_pipeline import retrieve_context
+from app.services.rag_pipeline import retrieve_context, resolve_to_vector_id
 from app.services.llm import generate_answer
 
 router = APIRouter(tags=["chat"])
@@ -49,9 +49,12 @@ async def chat_with_document(req: ChatRequest):
 
     logger.info("Chat query on doc %s: [redacted %d chars]", req.document_id, len(req.question))
 
+    # Resolve UUID → hash ID if needed
+    resolved_id = resolve_to_vector_id(req.document_id)
+
     # --- Retrieve relevant context chunks ---
     try:
-        context_chunks = retrieve_context(req.document_id, req.question, top_k=8)
+        context_chunks = retrieve_context(resolved_id, req.question, top_k=8)
     except Exception as e:
         logger.error("Context retrieval failed: %s", str(e))
         raise HTTPException(status_code=500, detail="Failed to search document.")

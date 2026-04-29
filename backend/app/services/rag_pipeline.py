@@ -1,10 +1,14 @@
 """
 RAG Pipeline Service
 Handles chunking, embedding, vector indexing, and context retrieval using ChromaDB.
+All data is persisted to disk so documents survive server restarts.
 """
 
 import hashlib
+import json
 import logging
+import os
+from pathlib import Path
 from typing import Optional
 
 import chromadb
@@ -13,20 +17,62 @@ from chromadb.config import Settings as ChromaSettings
 logger = logging.getLogger("documind.rag")
 
 # ---------------------------------------------------------------------------
-# ChromaDB Client (Singleton)
+# Persistence paths (inside backend/ directory)
+# ---------------------------------------------------------------------------
+_PERSIST_DIR = Path(__file__).resolve().parent.parent.parent / ".chroma_data"
+_DOC_STORE_PATH = _PERSIST_DIR / "document_store.json"
+
+# ---------------------------------------------------------------------------
+# ChromaDB Client (Singleton — persistent)
 # ---------------------------------------------------------------------------
 _chroma_client: Optional[chromadb.ClientAPI] = None
 _collection_name = "documind_documents"
 
-# In-memory store for full document text (keyed by doc_id)
-_document_store: dict[str, str] = {}
+# Persistent store for full document data (keyed by doc_id)
+_document_store: dict[str, dict] = {}
+_store_loaded = False
+
+
+def _ensure_persist_dir():
+    _PERSIST_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _load_document_store():
+    """Load the document store from disk on first access."""
+    global _document_store, _store_loaded
+    if _store_loaded:
+        return
+    _ensure_persist_dir()
+    if _DOC_STORE_PATH.exists():
+        try:
+            with open(_DOC_STORE_PATH, "r", encoding="utf-8") as f:
+                _document_store = json.load(f)
+            logger.info("Loaded %d documents from persistent store", len(_document_store))
+        except Exception as e:
+            logger.error("Failed to load document store: %s", str(e))
+            _document_store = {}
+    _store_loaded = True
+
+
+def _save_document_store():
+    """Save the document store to disk."""
+    _ensure_persist_dir()
+    try:
+        with open(_DOC_STORE_PATH, "w", encoding="utf-8") as f:
+            json.dump(_document_store, f, ensure_ascii=False)
+    except Exception as e:
+        logger.error("Failed to save document store: %s", str(e))
 
 
 def _get_chroma_client() -> chromadb.ClientAPI:
     global _chroma_client
     if _chroma_client is None:
-        _chroma_client = chromadb.Client(ChromaSettings(anonymized_telemetry=False))
-        logger.info("ChromaDB client initialized (in-memory for dev)")
+        _ensure_persist_dir()
+        _chroma_client = chromadb.PersistentClient(
+            path=str(_PERSIST_DIR / "chromadb"),
+            settings=ChromaSettings(anonymized_telemetry=False),
+        )
+        logger.info("ChromaDB persistent client initialized at %s", _PERSIST_DIR / "chromadb")
     return _chroma_client
 
 
@@ -61,19 +107,27 @@ def chunk_text(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 # Index a Document
 # ---------------------------------------------------------------------------
-def index_document(text: str, metadata: dict) -> dict:
+def index_document(text: str, metadata: dict, pages: list[str] | None = None) -> dict:
     """
     Chunk text, generate IDs, and upsert into ChromaDB.
     ChromaDB uses its built-in default embedding function (all-MiniLM-L6-v2).
+    Both vectors and full text are persisted to disk.
     """
+    _load_document_store()
+
     doc_id = hashlib.sha256(text[:1000].encode()).hexdigest()[:16]
     chunks = chunk_text(text)
 
     if not chunks:
         raise ValueError("Document produced no text chunks.")
 
-    # Store full text for later retrieval
-    _document_store[doc_id] = text
+    # Store full document data for later retrieval (text + pages + metadata)
+    _document_store[doc_id] = {
+        "text": text,
+        "pages": pages or [text],
+        "metadata": metadata,
+    }
+    _save_document_store()
 
     collection = _get_collection()
     ids = [f"{doc_id}_chunk_{i}" for i in range(len(chunks))]
@@ -134,8 +188,69 @@ def retrieve_context(document_id: str, query: str, top_k: int = 8) -> list[dict]
 
 
 # ---------------------------------------------------------------------------
-# Get Full Document Text
+# Get Full Document Text (backward-compatible)
 # ---------------------------------------------------------------------------
 def get_document_text(document_id: str) -> Optional[str]:
     """Retrieve the full text of a previously indexed document."""
-    return _document_store.get(document_id)
+    _load_document_store()
+    data = _document_store.get(document_id)
+    if data is None:
+        return None
+    return data["text"] if isinstance(data, dict) else data
+
+
+# ---------------------------------------------------------------------------
+# Get Full Document Data (text + pages + metadata)
+# ---------------------------------------------------------------------------
+def get_document_data(document_id: str) -> Optional[dict]:
+    """
+    Retrieve the full document data including per-page text and metadata.
+    Accepts either a ChromaDB hash ID or a Supabase UUID — auto-resolves.
+    """
+    _load_document_store()
+
+    # Direct lookup (hash ID)
+    data = _document_store.get(document_id)
+    if data:
+        return data
+
+    # If it looks like a UUID (contains dashes), try resolving via Supabase DB
+    if "-" in document_id:
+        resolved_id = _resolve_uuid_to_vector_id(document_id)
+        if resolved_id:
+            return _document_store.get(resolved_id)
+
+    return None
+
+
+def resolve_to_vector_id(document_id: str) -> str:
+    """
+    Given any document ID (UUID or hash), return the ChromaDB hash ID.
+    Returns the input unchanged if it's already a hash or can't be resolved.
+    """
+    _load_document_store()
+
+    # Already in the store? It's a hash ID
+    if document_id in _document_store:
+        return document_id
+
+    # Try UUID → hash resolution
+    if "-" in document_id:
+        resolved = _resolve_uuid_to_vector_id(document_id)
+        if resolved:
+            return resolved
+
+    return document_id  # return as-is (will fail later with proper error)
+
+
+def _resolve_uuid_to_vector_id(uuid_id: str) -> Optional[str]:
+    """Look up a Supabase UUID in the database and return the doc_vector_id."""
+    try:
+        from app.services.database import get_document_by_id
+        doc = get_document_by_id(uuid_id)
+        if doc and doc.get("doc_vector_id"):
+            logger.info("Resolved UUID %s → vector ID %s", uuid_id[:8], doc["doc_vector_id"])
+            return doc["doc_vector_id"]
+    except Exception as e:
+        logger.warning("UUID resolution failed for %s: %s", uuid_id[:8], str(e))
+    return None

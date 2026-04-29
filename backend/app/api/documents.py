@@ -53,6 +53,7 @@ class DocumentListItem(BaseModel):
     page_count: int
     chunk_count: int
     created_at: str
+    doc_vector_id: str = ""
 
 
 # ── Endpoints ────────────────────────────────────────────────
@@ -112,7 +113,7 @@ async def upload_document(
 
     # --- 3. Index into ChromaDB vector store ---
     try:
-        index_result = index_document(parsed["text"], parsed["metadata"])
+        index_result = index_document(parsed["text"], parsed["metadata"], pages=parsed.get("pages"))
     except Exception as e:
         logger.error("Indexing failed for %s: %s", filename, str(e))
         raise HTTPException(status_code=500, detail=f"Indexing failed: {str(e)}")
@@ -133,7 +134,7 @@ async def upload_document(
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     return DocumentResponse(
-        id=db_record.get("id", index_result["doc_id"]),
+        id=index_result["doc_id"],
         filename=filename,
         page_count=parsed["metadata"].get("page_count", 1),
         chunk_count=index_result["chunk_count"],
@@ -155,6 +156,7 @@ async def list_documents(authorization: str = Header(None)):
             page_count=d.get("page_count", 0),
             chunk_count=d.get("chunk_count", 0),
             created_at=d.get("created_at", ""),
+            doc_vector_id=d.get("doc_vector_id", ""),
         )
         for d in docs
     ]
@@ -177,3 +179,78 @@ async def delete_document(document_id: str, authorization: str = Header(None)):
     delete_document_record(document_id)
 
     return {"message": "Document deleted successfully.", "id": document_id}
+
+
+# ── Text-only upload (DOM scraper, extension) ────────────────
+
+class TextUploadRequest(BaseModel):
+    text: str
+    url: str = ""
+    title: str = "Untitled Document"
+    source_type: str = "dom-scraper"  # e.g. "google-drive", "local-file", "web-page"
+
+
+class TextUploadResponse(BaseModel):
+    document_id: str
+    chunk_count: int
+    message: str
+
+
+@router.post("/documents/upload-text", response_model=TextUploadResponse)
+async def upload_text_document(
+    req: TextUploadRequest,
+    authorization: str = Header(None),
+):
+    """
+    Index raw text extracted from the browser DOM.
+    Used by the Chrome extension when it can't download raw file bytes
+    (Google Drive, local files, web-based document viewers).
+
+    No file is stored in Supabase Storage — only the text is indexed in ChromaDB.
+    """
+    user = await get_user_from_token(authorization)
+
+    if not req.text or len(req.text.strip()) < 20:
+        raise HTTPException(status_code=400, detail="Text is too short to analyze.")
+
+    logger.info(
+        "Text upload from %s: '%s' (%d chars) for user %s",
+        req.source_type, req.title[:40], len(req.text), user["id"],
+    )
+
+    # Split text into rough "pages" by character count (~3000 chars/page)
+    page_size = 3000
+    pages = [req.text[i:i + page_size] for i in range(0, len(req.text), page_size)]
+
+    metadata = {
+        "filename": req.title,
+        "file_type": req.source_type,
+        "page_count": len(pages),
+        "source_url": req.url,
+    }
+
+    try:
+        index_result = index_document(req.text, metadata, pages=pages)
+    except Exception as e:
+        logger.error("Indexing failed for text upload '%s': %s", req.title, str(e))
+        raise HTTPException(status_code=500, detail=f"Indexing failed: {str(e)}")
+
+    # Optionally save to DB (will silently fail if table missing)
+    try:
+        insert_document_record(
+            user_id=user["id"],
+            filename=req.title,
+            file_type=req.source_type,
+            page_count=len(pages),
+            chunk_count=index_result["chunk_count"],
+            storage_path="",  # No file stored
+            doc_vector_id=index_result["doc_id"],
+        )
+    except Exception:
+        pass  # DB is optional for MVP
+
+    return TextUploadResponse(
+        document_id=index_result["doc_id"],
+        chunk_count=index_result["chunk_count"],
+        message="Text indexed successfully.",
+    )
