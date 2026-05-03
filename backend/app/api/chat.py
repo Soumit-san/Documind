@@ -60,11 +60,14 @@ async def chat_with_document(req: ChatRequest):
         raise HTTPException(status_code=500, detail="Failed to search document.")
 
     if not context_chunks:
-        return ChatResponse(
-            answer="I couldn't find relevant information in this document to answer your question.",
-            citations=[],
-            follow_up_questions=[],
-        )
+        # Even without matching chunks, let the LLM try with a general note
+        context_chunks = [{
+            "text": "No specific matching passages were found in the document for this query. "
+                    "Answer based on your general knowledge if possible.",
+            "chunk_index": 0,
+            "page": None,
+            "score": 0,
+        }]
 
     # --- Generate grounded answer ---
     try:

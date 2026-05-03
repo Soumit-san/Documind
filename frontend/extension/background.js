@@ -157,7 +157,61 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // --- Standard detection (no text extracted) ---
   if (message.type === 'DOCUMENT_DETECTED' && sender.tab?.id) {
     const tabId = sender.tab.id;
-    handleDocumentDetected(tabId, message.data);
+    const data = message.data;
+
+    // Try to auto-upload the raw file if it's a PDF or direct file
+    const isPdf = data.type === 'native-pdf' || data.type === 'direct-file' || (data.url && data.url.toLowerCase().endsWith('.pdf'));
+    
+    if (isPdf && data.url) {
+      console.log(`[DocuMind BG] Attempting raw file upload for ${data.url}`);
+      
+      data.uploading = true;
+      handleDocumentDetected(tabId, data);
+      chrome.runtime.sendMessage({ type: 'DOCUMENT_READY', data }).catch(()=>{});
+
+      fetch(data.url)
+        .then(r => {
+          if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+          return r.blob();
+        })
+        .then(blob => {
+          const formData = new FormData();
+          let filename = data.url.split('/').pop().split('#')[0].split('?')[0] || 'document.pdf';
+          if (!filename.includes('.')) filename += '.pdf';
+          
+          formData.append('file', blob, filename);
+          
+          return fetch('http://127.0.0.1:8000/api/documents/upload', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer dummy-dev-token' },
+            body: formData
+          });
+        })
+        .then(async r => {
+          const result = await r.json().catch(() => ({}));
+          if (!r.ok || !result.id) throw new Error(result.detail || 'Upload failed');
+          return result;
+        })
+        .then(result => {
+          console.log('[DocuMind BG] Raw file uploaded successfully:', result);
+          data.uploading = false;
+          data.document_id = result.id;
+          data.detected = true;
+          tabDocState.set(tabId, data);
+          chrome.runtime.sendMessage({ type: 'DOCUMENT_READY', data }).catch(()=>{});
+        })
+        .catch(err => {
+          console.error('[DocuMind BG] Raw file upload failed:', err);
+          data.uploading = false;
+          data.upload_error = err.toString();
+          chrome.runtime.sendMessage({ type: 'DOCUMENT_READY', data }).catch(()=>{});
+        });
+    } else {
+      // Cannot auto-upload (e.g. Google Drive preview), and text extraction failed
+      data.upload_error = 'Text extraction not supported for this cloud viewer without an extension update. Please upload manually.';
+      handleDocumentDetected(tabId, data);
+    }
+    
     sendResponse({ status: 'ok' });
   }
 

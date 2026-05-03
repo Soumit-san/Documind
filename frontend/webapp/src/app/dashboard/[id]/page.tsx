@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 
@@ -32,6 +32,7 @@ export default function DocumentPage() {
   const docId = params.id as string;
   const router = useRouter();
   const supabase = createClient();
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [token, setToken] = useState("");
   const [activeTab, setActiveTab] = useState<"summary" | "chat" | "entities">("summary");
@@ -48,6 +49,8 @@ export default function DocumentPage() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [feedbackState, setFeedbackState] = useState<Record<number, "up" | "down" | null>>({});
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -55,6 +58,11 @@ export default function DocumentPage() {
       setToken(session.access_token);
     });
   }, []);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, chatLoading]);
 
   async function runAutoSummarize() {
     if (!token) return;
@@ -86,9 +94,9 @@ export default function DocumentPage() {
     }
   }
 
-  async function sendChat() {
-    if (!chatInput.trim() || !token) return;
-    const question = chatInput.trim();
+  async function sendChat(overrideQuestion?: string) {
+    const question = (overrideQuestion || chatInput).trim();
+    if (!question || !token) return;
     setChatInput("");
     setChatMessages((prev) => [...prev, { role: "user", content: question }]);
     setChatLoading(true);
@@ -107,6 +115,7 @@ export default function DocumentPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Chat failed");
       setChatMessages((prev) => [
         ...prev,
         {
@@ -116,20 +125,33 @@ export default function DocumentPage() {
           follow_up_questions: data.follow_up_questions || [],
         },
       ]);
-    } catch {
+    } catch (e: unknown) {
       setChatMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Error connecting to the backend." },
+        { role: "assistant", content: `⚠ ${e instanceof Error ? e.message : "Error connecting to the backend."}` },
       ]);
     } finally {
       setChatLoading(false);
     }
   }
 
+  function handleCopy(text: string, idx: number) {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  }
+
+  function handleFeedback(idx: number, type: "up" | "down") {
+    setFeedbackState((prev) => ({
+      ...prev,
+      [idx]: prev[idx] === type ? null : type,
+    }));
+  }
+
   const tabStyle = (t: string) => ({
     padding: "12px 24px",
     fontFamily: "var(--font-heading)",
-    fontWeight: 800,
+    fontWeight: 800 as const,
     fontSize: "14px",
     letterSpacing: "0.02em",
     border: "2px solid #000",
@@ -139,6 +161,13 @@ export default function DocumentPage() {
     boxShadow: activeTab === t ? "4px 4px 0 #000" : "none",
     transition: "all 0.1s ease",
   });
+
+  const starterQuestions = [
+    { icon: "📋", text: "What is this document about?" },
+    { icon: "🔍", text: "What are the key findings?" },
+    { icon: "✅", text: "Summarize the main conclusions" },
+    { icon: "⚠️", text: "Are there any risks or concerns mentioned?" },
+  ];
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--surface)", display: "flex", flexDirection: "column" }}>
@@ -152,7 +181,7 @@ export default function DocumentPage() {
         </button>
       </nav>
 
-      <main style={{ flex: 1, padding: "48px", maxWidth: "1100px", width: "100%", margin: "0 auto" }}>
+      <main style={{ flex: 1, padding: "48px", maxWidth: "1100px", width: "100%", margin: "0 auto", display: "flex", flexDirection: "column" }}>
         {/* Header */}
         <div style={{ marginBottom: "32px" }}>
           <div className="nb-chip nb-chip--primary" style={{ marginBottom: "16px" }}>DOCUMENT ANALYSIS</div>
@@ -170,7 +199,7 @@ export default function DocumentPage() {
         </div>
 
         {error && (
-          <div style={{ padding: "16px", border: "2px solid #ff4a3d", background: "#ffebe5", color: "#c92a1f", marginBottom: "24px", fontWeight: 700 }}>
+          <div style={{ padding: "16px", border: "2px solid #ff4a3d", background: "#2a1a1a", color: "#ffb4ab", marginBottom: "24px", fontWeight: 700 }}>
             ⚠ {error}
           </div>
         )}
@@ -236,81 +265,292 @@ export default function DocumentPage() {
           </div>
         )}
 
-        {/* Chat Tab */}
+        {/* ─── Chat Tab ─── */}
         {activeTab === "chat" && (
-          <div className="nb-card">
-            <div className="nb-card__header">💬 ASK ANYTHING ABOUT THIS DOCUMENT</div>
-            <div className="nb-card__body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              {/* Messages */}
-              <div style={{ maxHeight: "400px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px", paddingBottom: "16px" }}>
-                {chatMessages.length === 0 && (
-                  <p style={{ color: "var(--on-surface-variant)", textAlign: "center", padding: "24px" }}>
-                    Ask a question about the document. Make sure to run &quot;AI Analysis&quot; first!
-                  </p>
-                )}
-                {chatMessages.map((msg, i) => (
-                  <div key={i} style={{ display: "flex", gap: "12px", alignItems: msg.role === "user" ? "flex-end" : "flex-start", flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
+          <div className="nb-card" style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "500px" }}>
+            <div className="nb-card__header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span>💬 ASK ANYTHING ABOUT THIS DOCUMENT</span>
+              {chatMessages.length > 0 && (
+                <button
+                  onClick={() => { setChatMessages([]); setFeedbackState({}); }}
+                  style={{
+                    background: "none", border: "1px solid #555", color: "var(--on-surface-variant)",
+                    padding: "4px 10px", fontSize: "11px", fontWeight: 700, cursor: "pointer",
+                    textTransform: "uppercase", letterSpacing: "0.03em",
+                  }}
+                >
+                  Clear Chat
+                </button>
+              )}
+            </div>
+            <div className="nb-card__body" style={{ flex: 1, display: "flex", flexDirection: "column", padding: 0 }}>
+              {/* Messages area */}
+              <div style={{
+                flex: 1, overflowY: "auto", padding: "24px",
+                display: "flex", flexDirection: "column", gap: "16px",
+              }}>
+                {/* Welcome state */}
+                {chatMessages.length === 0 && !chatLoading && (
+                  <div style={{
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    justifyContent: "center", textAlign: "center", padding: "48px 24px", gap: "16px",
+                  }}>
                     <div style={{
-                      padding: "12px 16px",
-                      border: "2px solid #000",
-                      maxWidth: "80%",
-                      background: msg.role === "user" ? "var(--primary)" : "var(--surface-container)",
-                      color: msg.role === "user" ? "#000" : "var(--on-surface)",
-                      boxShadow: "3px 3px 0 #000",
-                      fontSize: "14px",
-                      lineHeight: 1.6,
+                      width: "64px", height: "64px", display: "flex", alignItems: "center",
+                      justifyContent: "center", background: "var(--primary)", color: "var(--on-primary)",
+                      border: "2px solid #000", boxShadow: "4px 4px 0 #000", fontSize: "32px",
                     }}>
-                      {msg.content}
+                      🧠
+                    </div>
+                    <h3 style={{
+                      fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "22px",
+                      letterSpacing: "-0.03em", textTransform: "uppercase",
+                    }}>
+                      Ask me anything
+                    </h3>
+                    <p style={{ color: "var(--on-surface-variant)", fontSize: "14px", maxWidth: "400px", lineHeight: 1.6 }}>
+                      I can answer questions about your document with cited sources. Every answer is grounded in the actual document text.
+                    </p>
+                    <div style={{
+                      display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px",
+                      width: "100%", maxWidth: "500px", marginTop: "8px",
+                    }}>
+                      {starterQuestions.map((q, i) => (
+                        <button
+                          key={i}
+                          onClick={() => { setActiveTab("chat"); sendChat(q.text); }}
+                          style={{
+                            display: "flex", alignItems: "center", gap: "8px",
+                            padding: "12px 16px", background: "var(--surface-container-high)",
+                            border: "2px solid #000", cursor: "pointer", color: "var(--on-surface)",
+                            fontFamily: "var(--font-body)", fontWeight: 600, fontSize: "13px",
+                            textAlign: "left", boxShadow: "3px 3px 0 #000",
+                            transition: "all 0.1s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.transform = "translate(2px, 2px)";
+                            (e.currentTarget as HTMLElement).style.boxShadow = "1px 1px 0 #000";
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.transform = "none";
+                            (e.currentTarget as HTMLElement).style.boxShadow = "3px 3px 0 #000";
+                          }}
+                        >
+                          <span style={{ fontSize: "18px" }}>{q.icon}</span>
+                          {q.text}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Chat messages */}
+                {chatMessages.map((msg, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      gap: "12px",
+                      justifyContent: msg.role === "user" ? "flex-end" : "flex-start",
+                      animation: "chatMsgIn 0.25s ease-out",
+                    }}
+                  >
+                    {/* Assistant avatar */}
+                    {msg.role === "assistant" && (
+                      <div style={{
+                        width: "36px", height: "36px", flexShrink: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        background: "var(--primary)", color: "var(--on-primary)",
+                        border: "2px solid #000", fontSize: "20px",
+                      }}>
+                        🧠
+                      </div>
+                    )}
+
+                    <div style={{
+                      padding: "14px 18px",
+                      border: "2px solid #000",
+                      maxWidth: "75%",
+                      background: msg.role === "user" ? "var(--primary)" : "var(--surface-container-high)",
+                      color: msg.role === "user" ? "#000" : "var(--on-surface)",
+                      boxShadow: "4px 4px 0 #000",
+                      fontSize: "14px",
+                      lineHeight: 1.7,
+                    }}>
+                      <p style={{ margin: 0, whiteSpace: "pre-wrap" }}>{msg.content}</p>
+
+                      {/* Citation chips */}
                       {msg.citations && msg.citations.length > 0 && (
-                        <div style={{ marginTop: "8px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                        <div style={{
+                          marginTop: "12px", paddingTop: "10px",
+                          borderTop: "1px solid rgba(255,255,255,0.15)",
+                          display: "flex", flexWrap: "wrap", gap: "6px",
+                        }}>
                           {msg.citations.map((c, ci) => (
-                            <span key={ci} className="nb-chip" style={{ fontSize: "11px" }}>
-                              {c.section || (c.page ? `Page ${c.page}` : `Source`)}
+                            <span
+                              key={ci}
+                              className="nb-chip"
+                              style={{
+                                fontSize: "11px",
+                                background: "var(--tertiary-container)",
+                                color: "var(--on-tertiary-container)",
+                              }}
+                            >
+                              {c.page ? `📄 Page ${c.page}` : (c.section || `Source`)}
                             </span>
                           ))}
                         </div>
                       )}
+
+                      {/* Action buttons (assistant only) */}
+                      {msg.role === "assistant" && (
+                        <div style={{
+                          display: "flex", gap: "6px", marginTop: "10px",
+                          paddingTop: "8px", borderTop: "1px solid rgba(255,255,255,0.08)",
+                        }}>
+                          <button
+                            onClick={() => handleCopy(msg.content, i)}
+                            style={{
+                              display: "flex", alignItems: "center", gap: "4px",
+                              padding: "4px 10px", background: copiedIdx === i ? "var(--primary)" : "transparent",
+                              border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer",
+                              color: copiedIdx === i ? "#000" : "var(--on-surface-variant)",
+                              fontSize: "11px", fontWeight: 700, transition: "all 0.15s",
+                            }}
+                          >
+                            {copiedIdx === i ? "✓ Copied" : "📋 Copy"}
+                          </button>
+                          <button
+                            onClick={() => handleFeedback(i, "up")}
+                            style={{
+                              padding: "4px 8px",
+                              background: feedbackState[i] === "up" ? "var(--primary)" : "transparent",
+                              border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer",
+                              color: feedbackState[i] === "up" ? "#000" : "var(--on-surface-variant)",
+                              fontSize: "14px", transition: "all 0.15s",
+                            }}
+                          >
+                            👍
+                          </button>
+                          <button
+                            onClick={() => handleFeedback(i, "down")}
+                            style={{
+                              padding: "4px 8px",
+                              background: feedbackState[i] === "down" ? "#ff4a3d" : "transparent",
+                              border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer",
+                              color: feedbackState[i] === "down" ? "#fff" : "var(--on-surface-variant)",
+                              fontSize: "14px", transition: "all 0.15s",
+                            }}
+                          >
+                            👎
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Follow-up questions */}
                       {msg.follow_up_questions && msg.follow_up_questions.length > 0 && (
-                        <div style={{ marginTop: "12px", borderTop: "1px solid #555", paddingTop: "8px" }}>
-                          <p style={{ fontSize: "11px", color: "var(--on-surface-variant)", marginBottom: "4px" }}>Follow-up questions:</p>
-                          {msg.follow_up_questions.map((q, qi) => (
-                            <button
-                              key={qi}
-                              onClick={() => setChatInput(q)}
-                              style={{ display: "block", background: "none", border: "none", color: "var(--primary)", cursor: "pointer", fontSize: "13px", textAlign: "left", padding: "2px 0", textDecoration: "underline" }}
-                            >
-                              → {q}
-                            </button>
-                          ))}
+                        <div style={{
+                          marginTop: "12px", paddingTop: "10px",
+                          borderTop: "1px solid rgba(255,255,255,0.1)",
+                        }}>
+                          <p style={{
+                            fontSize: "10px", textTransform: "uppercase", letterSpacing: "0.05em",
+                            color: "var(--on-surface-variant)", marginBottom: "6px", fontWeight: 700,
+                          }}>
+                            Follow-up questions
+                          </p>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                            {msg.follow_up_questions.map((q, qi) => (
+                              <button
+                                key={qi}
+                                onClick={() => sendChat(q)}
+                                style={{
+                                  display: "flex", alignItems: "center", gap: "6px",
+                                  background: "var(--surface-container)", border: "1px solid #444",
+                                  color: "var(--primary)", cursor: "pointer",
+                                  fontSize: "12px", fontWeight: 600, textAlign: "left",
+                                  padding: "6px 10px", transition: "all 0.1s",
+                                  fontFamily: "var(--font-body)",
+                                }}
+                                onMouseEnter={(e) => {
+                                  (e.currentTarget as HTMLElement).style.background = "var(--primary)";
+                                  (e.currentTarget as HTMLElement).style.color = "#000";
+                                }}
+                                onMouseLeave={(e) => {
+                                  (e.currentTarget as HTMLElement).style.background = "var(--surface-container)";
+                                  (e.currentTarget as HTMLElement).style.color = "var(--primary)";
+                                }}
+                              >
+                                → {q}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
+
+                {/* Typing indicator */}
                 {chatLoading && (
-                  <div style={{ padding: "12px 16px", border: "2px solid #000", background: "var(--surface-container)", boxShadow: "3px 3px 0 #000", maxWidth: "60%" }}>
-                    <span style={{ animation: "pulse 1s infinite" }}>Thinking...</span>
+                  <div style={{ display: "flex", gap: "12px" }}>
+                    <div style={{
+                      width: "36px", height: "36px", flexShrink: 0,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: "var(--primary)", color: "var(--on-primary)",
+                      border: "2px solid #000", fontSize: "20px",
+                    }}>
+                      🧠
+                    </div>
+                    <div style={{
+                      padding: "14px 20px", border: "2px solid #000",
+                      background: "var(--surface-container-high)", boxShadow: "4px 4px 0 #000",
+                    }}>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        {[0, 1, 2].map((d) => (
+                          <span
+                            key={d}
+                            style={{
+                              width: "10px", height: "10px",
+                              background: "var(--primary)", border: "1px solid #000",
+                              animation: `typingBounce 1.2s ease-in-out infinite`,
+                              animationDelay: `${d * 0.15}s`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                <div ref={chatEndRef} />
               </div>
 
               {/* Input */}
-              <form
-                onSubmit={(e) => { e.preventDefault(); sendChat(); }}
-                style={{ display: "flex", gap: "12px" }}
-              >
-                <input
-                  type="text"
-                  className="nb-input"
-                  placeholder="Ask anything about this document..."
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  style={{ flex: 1 }}
-                />
-                <button type="submit" className="nb-btn nb-btn--primary" disabled={chatLoading || !chatInput.trim()}>
-                  SEND →
-                </button>
-              </form>
+              <div style={{ padding: "16px 24px", borderTop: "2px solid #000", background: "var(--surface-container)" }}>
+                <form
+                  onSubmit={(e) => { e.preventDefault(); sendChat(); }}
+                  style={{ display: "flex", gap: "12px" }}
+                >
+                  <input
+                    type="text"
+                    className="nb-input"
+                    placeholder="Ask anything about this document..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    style={{ flex: 1 }}
+                    disabled={chatLoading}
+                  />
+                  <button
+                    type="submit"
+                    className="nb-btn nb-btn--primary"
+                    disabled={chatLoading || !chatInput.trim()}
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    {chatLoading ? "⏳" : "SEND →"}
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         )}
@@ -352,6 +592,14 @@ export default function DocumentPage() {
           0% { opacity: 0.15; }
           50% { opacity: 0.35; }
           100% { opacity: 0.15; }
+        }
+        @keyframes chatMsgIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes typingBounce {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+          30% { transform: translateY(-8px); opacity: 1; }
         }
       `}</style>
     </div>

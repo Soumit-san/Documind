@@ -22,6 +22,7 @@ supabase==2.14.0
 
 # LLM Providers
 groq==0.25.0
+google-genai>=1.0.0
 
 # CORS & Security
 starlette==0.46.2

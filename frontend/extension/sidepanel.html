@@ -118,15 +118,35 @@
     <!-- ─── Chat Panel ─── -->
     <section id="panel-chat" class="dm-panel" role="tabpanel" hidden>
       <div class="dm-chat">
+        <!-- Chat Messages Area -->
         <div class="dm-chat__messages" id="chat-messages">
-          <div class="dm-message dm-message--assistant">
-            <div class="dm-message__avatar">
+          <!-- Welcome Message -->
+          <div class="dm-chat-welcome" id="chat-welcome">
+            <div class="dm-chat-welcome__icon">
               <span class="material-symbols-outlined">psychology</span>
             </div>
-            <div class="dm-message__content">
-              <p>Hi! I'm DocuMind AI. Open a document and ask me anything about it.</p>
+            <h3 class="dm-chat-welcome__title">Ask me anything</h3>
+            <p class="dm-chat-welcome__desc">I can answer questions about your document with cited sources.</p>
+            <div class="dm-chat-welcome__starters" id="chat-starters">
+              <button class="dm-follow-up" data-question="What is this document about?">
+                <span class="material-symbols-outlined">summarize</span>
+                What is this document about?
+              </button>
+              <button class="dm-follow-up" data-question="What are the key findings?">
+                <span class="material-symbols-outlined">lightbulb</span>
+                What are the key findings?
+              </button>
+              <button class="dm-follow-up" data-question="Summarize the main conclusions">
+                <span class="material-symbols-outlined">check_circle</span>
+                Summarize the main conclusions
+              </button>
             </div>
           </div>
+        </div>
+
+        <!-- Follow-up Suggestions -->
+        <div class="dm-chat__suggestions" id="chat-suggestions" style="display:none;">
+          <!-- Dynamically populated follow-up chips -->
         </div>
       </div>
     </section>

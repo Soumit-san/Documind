@@ -107,11 +107,27 @@ def chunk_text(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 # Index a Document
 # ---------------------------------------------------------------------------
+def _map_chunk_to_page(chunk_start: int, pages: list[str]) -> int:
+    """Given a character offset in the full text, return the 1-indexed page number."""
+    offset = 0
+    for i, page_text in enumerate(pages):
+        offset += len(page_text)
+        # Account for the "\n\n" separator between pages in full_text
+        if i < len(pages) - 1:
+            offset += 2
+        if chunk_start < offset:
+            return i + 1
+    return len(pages)
+
+
 def index_document(text: str, metadata: dict, pages: list[str] | None = None) -> dict:
     """
     Chunk text, generate IDs, and upsert into ChromaDB.
     ChromaDB uses its built-in default embedding function (all-MiniLM-L6-v2).
     Both vectors and full text are persisted to disk.
+
+    Each chunk's metadata includes a page_num so we can provide
+    accurate page citations during RAG answer generation.
     """
     _load_document_store()
 
@@ -121,13 +137,22 @@ def index_document(text: str, metadata: dict, pages: list[str] | None = None) ->
     if not chunks:
         raise ValueError("Document produced no text chunks.")
 
+    effective_pages = pages or [text]
+
     # Store full document data for later retrieval (text + pages + metadata)
     _document_store[doc_id] = {
         "text": text,
-        "pages": pages or [text],
+        "pages": effective_pages,
         "metadata": metadata,
     }
     _save_document_store()
+
+    # Pre-compute chunk start offsets for page mapping
+    chunk_starts = []
+    start = 0
+    for _ in chunks:
+        chunk_starts.append(start)
+        start += CHUNK_SIZE - CHUNK_OVERLAP
 
     collection = _get_collection()
     ids = [f"{doc_id}_chunk_{i}" for i in range(len(chunks))]
@@ -135,6 +160,7 @@ def index_document(text: str, metadata: dict, pages: list[str] | None = None) ->
         {
             "doc_id": doc_id,
             "chunk_index": i,
+            "page_num": _map_chunk_to_page(chunk_starts[i], effective_pages),
             "filename": metadata.get("filename", "unknown"),
             "file_type": metadata.get("file_type", "unknown"),
         }
@@ -180,6 +206,7 @@ def retrieve_context(document_id: str, query: str, top_k: int = 8) -> list[dict]
         context_chunks.append({
             "text": doc_text,
             "chunk_index": chunk_meta.get("chunk_index", i),
+            "page": chunk_meta.get("page_num"),
             "score": 1 - distance if distance is not None else None,
         })
 

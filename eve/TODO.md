@@ -44,16 +44,16 @@ This TODO list is derived from the PRD, Tech Stack, and Design specifications, b
 
 ### F-03: Conversational Q&A (RAG Engine)
 - **Backend**
-  - [ ] Create API endpoint `POST /api/chat`.
-  - [ ] Implement document chunking (512 tokens, 64 overlap) and embeddings (local model).
-  - [ ] Upsert vectors to ChromaDB.
-  - [ ] Implement semantic search and context retrieval.
-  - [ ] Connect to LLM (Ollama/Gemini/Groq) for answer generation with citations.
-  - [ ] Implement fallback behavior if the answer is not found.
+  - [x] Create API endpoint `POST /api/chat`.
+  - [x] Implement document chunking (512 tokens, 64 overlap) and embeddings (local model).
+  - [x] Upsert vectors to ChromaDB.
+  - [x] Implement semantic search and context retrieval.
+  - [x] Connect to LLM (Ollama/Gemini/Groq) for answer generation with citations.
+  - [x] Implement fallback behavior if the answer is not found.
 - **Frontend**
-  - [ ] Build Chat tab UI in the sidebar and Web App.
-  - [ ] Implement message bubbles, user/assistant distinction, and typing indicator.
-  - [ ] Implement follow-up question suggestions.
+  - [x] Build Chat tab UI in the sidebar and Web App.
+  - [x] Implement message bubbles, user/assistant distinction, and typing indicator.
+  - [x] Implement follow-up question suggestions.
 
 ### F-04: Multi-Document Corpus (Web App)
 - **Backend**
