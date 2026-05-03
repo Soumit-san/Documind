@@ -382,6 +382,12 @@
           setTimeout(() => {
             copyBtn.innerHTML = '<span class="material-symbols-outlined">content_copy</span>';
           }, 1500);
+        }).catch(err => {
+          console.error('[DocuMind] Failed to copy to clipboard:', err);
+          copyBtn.innerHTML = '<span class="material-symbols-outlined">error</span>';
+          setTimeout(() => {
+            copyBtn.innerHTML = '<span class="material-symbols-outlined">content_copy</span>';
+          }, 1500);
         });
       });
 

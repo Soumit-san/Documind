@@ -178,10 +178,10 @@
     let text = null;
     
     // Determine if it's a complex viewer that we should never use generic extraction on
+    // (Only block generic extraction for known problematic viewers like Google Drive and PDF viewers)
     const isComplexViewer = (
-      detection.type.startsWith('google') ||
-      detection.type.startsWith('office') ||
-      detection.type.includes('preview') ||
+      detection.type === 'google-drive' ||
+      detection.type === 'google-docs' ||
       detection.type === 'native-pdf' || 
       detection.type === 'embedded-pdf' || 
       detection.type === 'iframe-pdf' || 
