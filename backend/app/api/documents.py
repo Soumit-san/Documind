@@ -6,7 +6,7 @@ Integrates: Supabase Storage + PostgreSQL + RAG Pipeline.
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, File, UploadFile, HTTPException, Header
+from fastapi import APIRouter, File, UploadFile, HTTPException, Header, Form
 from pydantic import BaseModel
 
 from app.core.config import get_settings
@@ -61,6 +61,7 @@ class DocumentListItem(BaseModel):
 @router.post("/documents/upload", response_model=DocumentResponse)
 async def upload_document(
     file: Annotated[UploadFile, File(description="Document file to process")],
+    folder_id: Annotated[str | None, Form()] = None,
     authorization: str = Header(None),
 ):
     """
@@ -128,6 +129,7 @@ async def upload_document(
             chunk_count=index_result["chunk_count"],
             storage_path=storage_result["path"],
             doc_vector_id=index_result["doc_id"],
+            folder_id=folder_id,
         )
     except Exception as e:
         logger.error("Database insert failed for %s: %s", filename, str(e))
@@ -144,10 +146,13 @@ async def upload_document(
 
 
 @router.get("/documents", response_model=list[DocumentListItem])
-async def list_documents(authorization: str = Header(None)):
+async def list_documents(
+    folder_id: str | None = None,
+    authorization: str = Header(None)
+):
     """List all documents for the authenticated user."""
     user = await get_user_from_token(authorization)
-    docs = get_user_documents(user["id"])
+    docs = get_user_documents(user["id"], folder_id=folder_id)
     return [
         DocumentListItem(
             id=d.get("id", ""),

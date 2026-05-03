@@ -183,17 +183,22 @@ def index_document(text: str, metadata: dict, pages: list[str] | None = None) ->
 # ---------------------------------------------------------------------------
 # Retrieve Context
 # ---------------------------------------------------------------------------
-def retrieve_context(document_id: str, query: str, top_k: int = 8) -> list[dict]:
+def retrieve_context(document_ids: list[str], query: str, top_k: int = 8) -> list[dict]:
     """
-    Semantic search over indexed chunks for a given document.
+    Semantic search over indexed chunks for a given set of documents.
     Returns top-k relevant chunks with metadata.
     """
+    if not document_ids:
+        return []
+
     collection = _get_collection()
+
+    where_clause = {"doc_id": document_ids[0]} if len(document_ids) == 1 else {"doc_id": {"$in": document_ids}}
 
     results = collection.query(
         query_texts=[query],
         n_results=top_k,
-        where={"doc_id": document_id},
+        where=where_clause,
     )
 
     if not results or not results["documents"] or not results["documents"][0]:
@@ -207,10 +212,11 @@ def retrieve_context(document_id: str, query: str, top_k: int = 8) -> list[dict]
             "text": doc_text,
             "chunk_index": chunk_meta.get("chunk_index", i),
             "page": chunk_meta.get("page_num"),
+            "filename": chunk_meta.get("filename", "Unknown Document"),
             "score": 1 - distance if distance is not None else None,
         })
 
-    logger.info("Retrieved %d context chunks for doc %s", len(context_chunks), document_id)
+    logger.info("Retrieved %d context chunks for %d documents", len(context_chunks), len(document_ids))
     return context_chunks
 
 
