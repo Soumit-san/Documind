@@ -4,11 +4,13 @@ Conversational Q&A (RAG Chat) endpoint.
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 
+from app.core.auth import get_user_from_token
 from app.services.rag_pipeline import retrieve_context, resolve_to_vector_id
 from app.services.llm import generate_answer
+from app.services.database import get_documents_by_folder
 
 router = APIRouter(tags=["chat"])
 logger = logging.getLogger("documind.chat")
@@ -20,7 +22,8 @@ class ChatMessage(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    document_id: str
+    document_id: str | None = None
+    folder_id: str | None = None
     question: str
     history: list[ChatMessage] = []
 
@@ -29,6 +32,7 @@ class SourceCitation(BaseModel):
     text: str
     page: int | None = None
     section: str | None = None
+    filename: str | None = None
     score: float | None = None
 
 
@@ -39,7 +43,7 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_document(req: ChatRequest):
+async def chat_with_document(req: ChatRequest, authorization: str = Header(None)):
     """
     Ask a natural-language question against an indexed document.
     Uses RAG: semantic search → re-rank → LLM generation with citations.
@@ -47,14 +51,27 @@ async def chat_with_document(req: ChatRequest):
     if not req.question.strip():
         raise HTTPException(status_code=400, detail="Question cannot be empty.")
 
-    logger.info("Chat query on doc %s: [redacted %d chars]", req.document_id, len(req.question))
+    logger.info("Chat query: [redacted %d chars]", len(req.question))
 
-    # Resolve UUID → hash ID if needed
-    resolved_id = resolve_to_vector_id(req.document_id)
+    user = await get_user_from_token(authorization)
+
+    document_ids = []
+    if req.folder_id:
+        docs = get_documents_by_folder(req.folder_id, user["id"])
+        if not docs:
+            raise HTTPException(status_code=404, detail="Folder is empty or not found.")
+        document_ids = [d["doc_vector_id"] for d in docs if d.get("doc_vector_id")]
+        if not document_ids:
+            raise HTTPException(status_code=404, detail="No indexed documents found in folder.")
+    elif req.document_id:
+        resolved_id = resolve_to_vector_id(req.document_id)
+        document_ids = [resolved_id]
+    else:
+        raise HTTPException(status_code=400, detail="Must provide document_id or folder_id.")
 
     # --- Retrieve relevant context chunks ---
     try:
-        context_chunks = retrieve_context(resolved_id, req.question, top_k=8)
+        context_chunks = retrieve_context(document_ids, req.question, top_k=8)
     except Exception as e:
         logger.error("Context retrieval failed: %s", str(e))
         raise HTTPException(status_code=500, detail="Failed to search document.")

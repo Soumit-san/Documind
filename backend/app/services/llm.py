@@ -335,15 +335,15 @@ Your primary knowledge comes from the provided document context chunks.
 
 Rules:
 1. ALWAYS answer the user's question as helpfully and thoroughly as possible.
-2. Use the document context chunks as your PRIMARY source. Cite pages when referencing specific document content.
+2. Use the document context chunks as your PRIMARY source. Cite filenames and pages when referencing specific document content.
 3. If the document mentions a topic (e.g. a person's name, a term, an organization), use what the document says AND supplement with relevant general knowledge to give a complete answer.
 4. If the document does NOT contain information about the topic at all, say so clearly but still try to give a helpful general answer if you can.
 5. NEVER refuse to answer. Always provide the best response you can.
-6. When citing document content, use inline page references like (Page 3).
-7. Suggest 2-3 relevant follow-up questions the user might ask about the document.
+6. When citing document content, use inline references like (Filename.pdf, Page 3).
+7. Suggest 2-3 relevant follow-up questions the user might ask about the documents.
 
 Respond in this JSON format (no markdown code blocks):
-{"answer": "Your detailed answer here with inline citations like (Page 3).", "citations": [{"text": "quoted excerpt", "page": 3, "section": "relevant section"}], "follow_up_questions": ["Question 1?", "Question 2?", "Question 3?"]}"""
+{"answer": "Your detailed answer here with inline citations like (Filename.pdf, Page 3).", "citations": [{"text": "quoted excerpt", "filename": "Filename.pdf", "page": 3, "section": "relevant section"}], "follow_up_questions": ["Question 1?", "Question 2?", "Question 3?"]}"""
 
 
 def generate_answer(
@@ -354,11 +354,12 @@ def generate_answer(
     """
     Generate a grounded, cited answer using retrieved context chunks.
     """
-    # Format context with page numbers
+    # Format context with page numbers and filenames
     context_str = ""
     for i, chunk in enumerate(context_chunks):
         page_info = f", page: {chunk['page']}" if chunk.get('page') else ""
-        context_str += f"\n--- Chunk {i + 1} (relevance: {chunk.get('score', 'N/A')}{page_info}) ---\n{chunk['text']}\n"
+        file_info = f", file: {chunk.get('filename', 'Unknown')}"
+        context_str += f"\n--- Chunk {i + 1} (relevance: {chunk.get('score', 'N/A')}{file_info}{page_info}) ---\n{chunk['text']}\n"
 
     # Format chat history
     history_str = ""

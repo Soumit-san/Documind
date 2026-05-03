@@ -16,6 +16,7 @@ logger = logging.getLogger("documind.database")
 # ──────────────────────────────────────────────────────────────
 
 TABLE_DOCUMENTS = "documents"
+TABLE_FOLDERS = "folders"
 
 
 def insert_document_record(
@@ -26,6 +27,7 @@ def insert_document_record(
     chunk_count: int,
     storage_path: str,
     doc_vector_id: str,
+    folder_id: Optional[str] = None,
 ) -> dict:
     """
     Insert a document metadata row into the 'documents' table.
@@ -42,35 +44,65 @@ def insert_document_record(
         "doc_vector_id": doc_vector_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
+    
+    if folder_id:
+        try:
+            folder_check = supabase.table(TABLE_FOLDERS).select("user_id").eq("id", folder_id).single().execute()
+            if not folder_check.data or folder_check.data.get("user_id") != user_id:
+                raise ValueError("Folder does not belong to the requesting user")
+            record["folder_id"] = folder_id
+        except Exception as e:
+            logger.error("Failed to verify folder ownership: %s", str(e))
+            raise ValueError(f"Invalid folder_id: {str(e)}")
 
     try:
         result = supabase.table(TABLE_DOCUMENTS).insert(record).execute()
         logger.info("Inserted document record for user %s: %s", user_id, filename)
         return result.data[0] if result.data else record
     except Exception as e:
-        logger.error("Failed to insert document record (table might be missing): %s", str(e))
-        # Return the mock record so the API can still return a valid response
-        record["id"] = doc_vector_id
-        return record
+        logger.error("Failed to insert document record: %s", str(e))
+        raise
 
 
-def get_user_documents(user_id: str) -> list[dict]:
+def get_user_documents(user_id: str, folder_id: Optional[str] = None) -> list[dict]:
     """
-    Retrieve all document records for a given user.
+    Retrieve all document records for a given user, optionally filtered by folder_id.
     """
     supabase = get_supabase_admin_client()
 
     try:
+        query = supabase.table(TABLE_DOCUMENTS).select("*").eq("user_id", user_id)
+        if folder_id is not None:
+            # If folder_id is "null", we could filter for un-foldered docs, 
+            # but usually we just pass the exact UUID or empty string.
+            if folder_id == "":
+                query = query.is_("folder_id", "null")
+            else:
+                query = query.eq("folder_id", folder_id)
+                
+        result = query.order("created_at", desc=True).execute()
+        return result.data or []
+    except Exception as e:
+        logger.error("Failed to fetch documents (table might be missing): %s", str(e))
+        return []
+
+
+def get_documents_by_folder(folder_id: str, user_id: str) -> list[dict]:
+    """
+    Retrieve all documents inside a specific folder, scoped by user_id.
+    """
+    supabase = get_supabase_admin_client()
+    try:
         result = (
             supabase.table(TABLE_DOCUMENTS)
             .select("*")
+            .eq("folder_id", folder_id)
             .eq("user_id", user_id)
-            .order("created_at", desc=True)
             .execute()
         )
         return result.data or []
     except Exception as e:
-        logger.error("Failed to fetch documents (table might be missing): %s", str(e))
+        logger.error("Failed to fetch documents for folder %s: %s", folder_id, str(e))
         return []
 
 
@@ -80,15 +112,18 @@ def get_document_by_id(document_id: str) -> Optional[dict]:
     """
     supabase = get_supabase_admin_client()
 
-    result = (
-        supabase.table(TABLE_DOCUMENTS)
-        .select("*")
-        .eq("id", document_id)
-        .single()
-        .execute()
-    )
-
-    return result.data
+    try:
+        result = (
+            supabase.table(TABLE_DOCUMENTS)
+            .select("*")
+            .eq("id", document_id)
+            .single()
+            .execute()
+        )
+        return result.data
+    except Exception as e:
+        logger.error("Failed to fetch document %s: %s", document_id, str(e))
+        return None
 
 
 def delete_document_record(document_id: str) -> bool:
@@ -103,4 +138,61 @@ def delete_document_record(document_id: str) -> bool:
         return True
     except Exception as e:
         logger.error("Failed to delete document record %s: %s", document_id, str(e))
+        return False
+
+
+# ──────────────────────────────────────────────────────────────
+# Folders table operations
+# ──────────────────────────────────────────────────────────────
+
+def create_folder_record(user_id: str, name: str) -> Optional[dict]:
+    """
+    Create a new folder for the user.
+    """
+    supabase = get_supabase_admin_client()
+    record = {
+        "user_id": user_id,
+        "name": name,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        result = supabase.table(TABLE_FOLDERS).insert(record).execute()
+        logger.info("Created folder '%s' for user %s", name, user_id)
+        return result.data[0] if result.data else record
+    except Exception as e:
+        logger.error("Failed to create folder record: %s", str(e))
+        return None
+
+
+def get_user_folders(user_id: str) -> list[dict]:
+    """
+    Retrieve all folders for a given user.
+    """
+    supabase = get_supabase_admin_client()
+    try:
+        result = (
+            supabase.table(TABLE_FOLDERS)
+            .select("*")
+            .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        return result.data or []
+    except Exception as e:
+        logger.error("Failed to fetch folders: %s", str(e))
+        return []
+
+
+def delete_folder_record(folder_id: str, user_id: str) -> bool:
+    """
+    Delete a folder. Note: dependent documents will have folder_id set to NULL 
+    due to ON DELETE SET NULL constraint.
+    """
+    supabase = get_supabase_admin_client()
+    try:
+        supabase.table(TABLE_FOLDERS).delete().eq("id", folder_id).eq("user_id", user_id).execute()
+        logger.info("Deleted folder %s", folder_id)
+        return True
+    except Exception as e:
+        logger.error("Failed to delete folder %s: %s", folder_id, str(e))
         return False
