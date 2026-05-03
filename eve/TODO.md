@@ -57,13 +57,13 @@ This TODO list is derived from the PRD, Tech Stack, and Design specifications, b
 
 ### F-04: Multi-Document Corpus (Web App)
 - **Backend**
-  - [ ] Create API endpoints for multi-file upload, document management (folders/projects).
-  - [ ] Create persistent vector index per user.
-  - [ ] Modify RAG engine to query across multiple documents within a folder.
+  - [x] Create API endpoints for multi-file upload, document management (folders/projects).
+  - [x] Create persistent vector index per user.
+  - [x] Modify RAG engine to query across multiple documents within a folder.
 - **Frontend (Web App)**
-  - [ ] Build drag-and-drop file upload interface.
-  - [ ] Build library view for organizing documents.
-  - [ ] Implement multi-document chat interface.
+  - [x] Build drag-and-drop file upload interface.
+  - [x] Build library view for organizing documents.
+  - [x] Implement multi-document chat interface.
 
 ### F-05: Export & Share
 - **Backend**

@@ -4,9 +4,10 @@ Conversational Q&A (RAG Chat) endpoint.
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Header
 from pydantic import BaseModel
 
+from app.core.auth import get_user_from_token
 from app.services.rag_pipeline import retrieve_context, resolve_to_vector_id
 from app.services.llm import generate_answer
 from app.services.database import get_documents_by_folder
@@ -42,7 +43,7 @@ class ChatResponse(BaseModel):
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat_with_document(req: ChatRequest):
+async def chat_with_document(req: ChatRequest, authorization: str = Header(None)):
     """
     Ask a natural-language question against an indexed document.
     Uses RAG: semantic search → re-rank → LLM generation with citations.
@@ -52,9 +53,11 @@ async def chat_with_document(req: ChatRequest):
 
     logger.info("Chat query: [redacted %d chars]", len(req.question))
 
+    user = await get_user_from_token(authorization)
+
     document_ids = []
     if req.folder_id:
-        docs = get_documents_by_folder(req.folder_id)
+        docs = get_documents_by_folder(req.folder_id, user["id"])
         if not docs:
             raise HTTPException(status_code=404, detail="Folder is empty or not found.")
         document_ids = [d["doc_vector_id"] for d in docs if d.get("doc_vector_id")]

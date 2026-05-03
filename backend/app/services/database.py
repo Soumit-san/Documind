@@ -46,17 +46,22 @@ def insert_document_record(
     }
     
     if folder_id:
-        record["folder_id"] = folder_id
+        try:
+            folder_check = supabase.table(TABLE_FOLDERS).select("user_id").eq("id", folder_id).single().execute()
+            if not folder_check.data or folder_check.data.get("user_id") != user_id:
+                raise ValueError("Folder does not belong to the requesting user")
+            record["folder_id"] = folder_id
+        except Exception as e:
+            logger.error("Failed to verify folder ownership: %s", str(e))
+            raise ValueError(f"Invalid folder_id: {str(e)}")
 
     try:
         result = supabase.table(TABLE_DOCUMENTS).insert(record).execute()
         logger.info("Inserted document record for user %s: %s", user_id, filename)
         return result.data[0] if result.data else record
     except Exception as e:
-        logger.error("Failed to insert document record (table might be missing): %s", str(e))
-        # Return the mock record so the API can still return a valid response
-        record["id"] = doc_vector_id
-        return record
+        logger.error("Failed to insert document record: %s", str(e))
+        raise
 
 
 def get_user_documents(user_id: str, folder_id: Optional[str] = None) -> list[dict]:
@@ -82,9 +87,9 @@ def get_user_documents(user_id: str, folder_id: Optional[str] = None) -> list[di
         return []
 
 
-def get_documents_by_folder(folder_id: str) -> list[dict]:
+def get_documents_by_folder(folder_id: str, user_id: str) -> list[dict]:
     """
-    Retrieve all documents inside a specific folder.
+    Retrieve all documents inside a specific folder, scoped by user_id.
     """
     supabase = get_supabase_admin_client()
     try:
@@ -92,6 +97,7 @@ def get_documents_by_folder(folder_id: str) -> list[dict]:
             supabase.table(TABLE_DOCUMENTS)
             .select("*")
             .eq("folder_id", folder_id)
+            .eq("user_id", user_id)
             .execute()
         )
         return result.data or []
