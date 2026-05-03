@@ -157,7 +157,72 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // --- Standard detection (no text extracted) ---
   if (message.type === 'DOCUMENT_DETECTED' && sender.tab?.id) {
     const tabId = sender.tab.id;
-    handleDocumentDetected(tabId, message.data);
+    const data = message.data;
+
+    // Try to auto-upload the raw file if it's a PDF or direct file
+    const isPdf = data.type === 'native-pdf' || data.type === 'direct-file' || (data.url && data.url.toLowerCase().endsWith('.pdf'));
+    
+    if (isPdf && data.url) {
+      console.log(`[DocuMind BG] Attempting raw file upload for ${data.url}`);
+      
+      data.uploading = true;
+      handleDocumentDetected(tabId, data);
+      chrome.runtime.sendMessage({ type: 'DOCUMENT_READY', data }).catch(()=>{});
+
+      chrome.storage.local.get(['supabaseToken'], (result) => {
+        const token = result.supabaseToken;
+        if (!token) {
+          console.error('[DocuMind BG] No auth token found.');
+          data.uploading = false;
+          data.upload_error = 'Not authenticated. Please log in to the DocuMind Web App.';
+          chrome.runtime.sendMessage({ type: 'DOCUMENT_READY', data }).catch(()=>{});
+          return;
+        }
+
+        fetch(data.url)
+          .then(r => {
+            if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+            return r.blob();
+          })
+          .then(blob => {
+            const formData = new FormData();
+            let filename = data.url.split('/').pop().split('#')[0].split('?')[0] || 'document.pdf';
+            if (!filename.includes('.')) filename += '.pdf';
+            
+            formData.append('file', blob, filename);
+            
+            return fetch('http://127.0.0.1:8000/api/documents/upload', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${token}` },
+              body: formData
+            });
+          })
+          .then(async r => {
+            const result = await r.json().catch(() => ({}));
+            if (!r.ok || !result.id) throw new Error(result.detail || 'Upload failed');
+            return result;
+          })
+          .then(result => {
+            console.log('[DocuMind BG] Raw file uploaded successfully:', result);
+            data.uploading = false;
+            data.document_id = result.id;
+            data.detected = true;
+            tabDocState.set(tabId, data);
+            chrome.runtime.sendMessage({ type: 'DOCUMENT_READY', data }).catch(()=>{});
+          })
+          .catch(err => {
+            console.error('[DocuMind BG] Raw file upload failed:', err);
+            data.uploading = false;
+            data.upload_error = err.toString();
+            chrome.runtime.sendMessage({ type: 'DOCUMENT_READY', data }).catch(()=>{});
+          });
+      });
+    } else {
+      // Cannot auto-upload (e.g. Google Drive preview), and text extraction failed
+      data.upload_error = 'Text extraction not supported for this cloud viewer without an extension update. Please upload manually.';
+      handleDocumentDetected(tabId, data);
+    }
+    
     sendResponse({ status: 'ok' });
   }
 
@@ -168,52 +233,61 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     console.log(`[DocuMind BG] Received ${message.text.length} chars of text from tab ${tabId}`);
 
-    // Upload the text to the backend
-    fetch('http://127.0.0.1:8000/api/documents/upload-text', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer dummy-dev-token',
-      },
-      body: JSON.stringify({
-        text: message.text,
-        url: data.url,
-        title: message.title || 'Untitled Document',
-        source_type: data.type,
-      }),
-    })
-    .then(async r => {
-      const result = await r.json().catch(() => ({}));
-      if (!r.ok || !result.document_id) {
-        throw new Error(result.detail || 'Upload failed or missing document_id');
+    chrome.storage.local.get(['supabaseToken'], (result) => {
+      const token = result.supabaseToken;
+      if (!token) {
+        data.upload_error = 'Not authenticated. Please log in to the DocuMind Web App.';
+        chrome.runtime.sendMessage({ type: 'DOCUMENT_READY', data }).catch(()=>{});
+        return;
       }
-      return result;
-    })
-    .then(result => {
-      console.log('[DocuMind BG] Text indexed:', result);
-      data.document_id = result.document_id;
-      data.detected = true;
 
-      // Store state
-      tabDocState.set(tabId, data);
+      // Upload the text to the backend
+      fetch('http://127.0.0.1:8000/api/documents/upload-text', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          text: message.text,
+          url: data.url,
+          title: message.title || 'Untitled Document',
+          source_type: data.type,
+        }),
+      })
+      .then(async r => {
+        const result = await r.json().catch(() => ({}));
+        if (!r.ok || !result.document_id) {
+          throw new Error(result.detail || 'Upload failed or missing document_id');
+        }
+        return result;
+      })
+      .then(result => {
+        console.log('[DocuMind BG] Text indexed:', result);
+        data.document_id = result.document_id;
+        data.detected = true;
 
-      // Notify sidepanel
-      chrome.runtime.sendMessage({
-        type: 'DOCUMENT_READY',
-        data: data,
-      }).catch(() => {
-        // Sidepanel might not be open yet — that's OK, it will poll on open
+        // Store state
+        tabDocState.set(tabId, data);
+
+        // Notify sidepanel
+        chrome.runtime.sendMessage({
+          type: 'DOCUMENT_READY',
+          data: data,
+        }).catch(() => {
+          // Sidepanel might not be open yet — that's OK, it will poll on open
+        });
+      })
+      .catch(err => {
+        console.error('[DocuMind BG] Text upload failed:', err);
+        data.upload_error = err.toString();
+        
+        // Notify sidepanel immediately of error
+        chrome.runtime.sendMessage({
+          type: 'DOCUMENT_READY',
+          data: data,
+        }).catch(() => {});
       });
-    })
-    .catch(err => {
-      console.error('[DocuMind BG] Text upload failed:', err);
-      data.upload_error = err.toString();
-      
-      // Notify sidepanel immediately of error
-      chrome.runtime.sendMessage({
-        type: 'DOCUMENT_READY',
-        data: data,
-      }).catch(() => {});
     });
 
     sendResponse({ status: 'processing' });
@@ -227,21 +301,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // --- Legacy: raw byte upload (still useful for direct HTTP PDFs) ---
   if (message.type === 'UPLOAD_DOCUMENT') {
-    fetch('http://127.0.0.1:8000/api/documents/upload', {
-      method: 'POST',
-      body: (() => {
-        const formData = new FormData();
-        const blob = new Blob([new Uint8Array(message.bytes)], { type: message.contentType });
-        formData.append('file', blob, message.filename);
-        return formData;
-      })(),
-      headers: {
-        'Authorization': 'Bearer dummy-dev-token',
-      },
-    })
-    .then(r => r.json())
-    .then(data => sendResponse({ document_id: data.id, error: data.detail }))
-    .catch(err => sendResponse({ error: err.toString() }));
+    chrome.storage.local.get(['supabaseToken'], (result) => {
+      const token = result.supabaseToken;
+      if (!token) {
+        sendResponse({ error: 'Not authenticated. Please log in to the DocuMind Web App.' });
+        return;
+      }
+
+      fetch('http://127.0.0.1:8000/api/documents/upload', {
+        method: 'POST',
+        body: (() => {
+          const formData = new FormData();
+          const blob = new Blob([new Uint8Array(message.bytes)], { type: message.contentType });
+          formData.append('file', blob, message.filename);
+          return formData;
+        })(),
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+      .then(r => r.json())
+      .then(data => sendResponse({ document_id: data.id, error: data.detail }))
+      .catch(err => sendResponse({ error: err.toString() }));
+    });
 
     return true; // Keep channel open for async response
   }

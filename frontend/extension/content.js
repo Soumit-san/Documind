@@ -176,6 +176,17 @@
    */
   function extractText(detection) {
     let text = null;
+    
+    // Determine if it's a complex viewer that we should never use generic extraction on
+    // (Only block generic extraction for known problematic viewers like Google Drive and PDF viewers)
+    const isComplexViewer = (
+      detection.type === 'google-drive' ||
+      detection.type === 'google-docs' ||
+      detection.type === 'native-pdf' || 
+      detection.type === 'embedded-pdf' || 
+      detection.type === 'iframe-pdf' || 
+      (detection.type === 'direct-file' && detection.extension === '.pdf')
+    );
 
     switch (detection.type) {
       case 'native-pdf':
@@ -196,7 +207,11 @@
 
     // Fallback: generic DOM text extraction
     if (!text || text.trim().length < 30) {
-      text = extractGenericText();
+      if (!isComplexViewer) {
+        text = extractGenericText();
+      } else {
+        return null;
+      }
     }
 
     return text ? text.trim() : null;

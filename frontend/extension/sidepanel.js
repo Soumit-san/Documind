@@ -1,6 +1,6 @@
 /**
- * DocuMind AI — Side Panel Logic (F-01 + F-02)
- * Handles: tab switching, document state, auto-summarize, chat, status updates.
+ * DocuMind AI — Side Panel Logic (F-01 + F-02 + F-03)
+ * Handles: tab switching, document state, auto-summarize, chat Q&A, status updates.
  */
 
 (() => {
@@ -33,6 +33,9 @@
   const chatForm = document.getElementById('chat-form');
   const chatInput = document.getElementById('chat-input');
   const chatMessages = document.getElementById('chat-messages');
+  const chatWelcome = document.getElementById('chat-welcome');
+  const chatStarters = document.getElementById('chat-starters');
+  const chatSuggestions = document.getElementById('chat-suggestions');
 
   const entitiesContainer = document.getElementById('entities-container');
   const entitiesList = document.getElementById('entities-list');
@@ -47,25 +50,28 @@
   let currentDocData = null;
 
   // ─── Tab Switching ──────────────────────────────────────────
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => {
-        t.classList.remove('dm-tab--active');
-        t.setAttribute('aria-selected', 'false');
-      });
-      panels.forEach(p => (p.hidden = true));
-
-      tab.classList.add('dm-tab--active');
-      tab.setAttribute('aria-selected', 'true');
-      const panelId = `panel-${tab.dataset.tab}`;
-      const panel = document.getElementById(panelId);
-      if (panel) panel.hidden = false;
-
-      // If switching to chat, focus the input
-      if (tab.dataset.tab === 'chat') {
-        chatInput?.focus();
-      }
+  function switchToTab(tabName) {
+    tabs.forEach(t => {
+      t.classList.remove('dm-tab--active');
+      t.setAttribute('aria-selected', 'false');
     });
+    panels.forEach(p => (p.hidden = true));
+
+    const targetTab = document.querySelector(`.dm-tab[data-tab="${tabName}"]`);
+    if (targetTab) {
+      targetTab.classList.add('dm-tab--active');
+      targetTab.setAttribute('aria-selected', 'true');
+    }
+    const panel = document.getElementById(`panel-${tabName}`);
+    if (panel) panel.hidden = false;
+
+    if (tabName === 'chat') {
+      chatInput?.focus();
+    }
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => switchToTab(tab.dataset.tab));
   });
 
   // ─── Status Updates ─────────────────────────────────────────
@@ -94,17 +100,14 @@
     }
   }
 
-  // ─── Rendering ─────────────────────────────────────
+  // ─── Summary Rendering ─────────────────────────────────────
   function renderTakeaways(summaryData) {
     if (!summaryTakeaways) return;
     summaryTakeaways.innerHTML = '';
     summaryTakeaways.style.display = 'flex';
     if (summarySkeleton) summarySkeleton.style.display = 'none';
 
-    // summaryData might be a dict containing "summary" and "citations"
     const text = summaryData.summary || String(summaryData);
-    
-    // Split into sentences for the numbered list effect
     const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
     
     sentences.forEach((sentence, i) => {
@@ -162,7 +165,6 @@
       el.appendChild(btn);
       el.appendChild(content);
 
-      // Toggle logic
       btn.addEventListener('click', () => el.classList.toggle('dm-accordion--open'));
       sectionBreakdown.appendChild(el);
     });
@@ -267,14 +269,12 @@
     showDocContext(data.url);
 
     if (data.document_id) {
-      // Backend already has it indexed — go straight to summarize
       currentDocId = data.document_id;
       triggerAutoSummarize(currentDocId);
       return;
     }
 
     if (data.upload_error) {
-      // Background script failed to upload text
       setStatus('idle', 'Text extraction failed', 'error');
       setProgress(0, 'Upload failed');
       if (summaryTakeaways) {
@@ -295,11 +295,9 @@
       return;
     }
 
-    // Text is being extracted and uploaded by the background script — show processing state
     setStatus('detecting', 'Extracting text from document…', 'psychology');
     setProgress(30, 'Analysis: Reading document…');
 
-    // Safety timeout: if no document_id arrives in 60s, show error with retry
     const uploadTimeout = setTimeout(() => {
       if (!currentDocId) {
         setStatus('idle', 'Processing timed out', 'error');
@@ -324,54 +322,193 @@
     currentDocData._uploadTimeout = uploadTimeout;
   }
 
-  // ─── Chat ───────────────────────────────────────────────────
-  function addMessage(role, content) {
-    const div = document.createElement('div');
-    div.className = `dm-message dm-message--${role}`;
+  // ─── Chat: Message Rendering ────────────────────────────────
+  function hideWelcome() {
+    if (chatWelcome) chatWelcome.style.display = 'none';
+  }
 
+  function addMessage(role, content, citations, followUps) {
+    hideWelcome();
+
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `dm-message dm-message--${role}`;
+
+    if (role === 'assistant') {
+      // Avatar
+      const avatar = document.createElement('div');
+      avatar.className = 'dm-message__avatar';
+      const avatarIcon = document.createElement('span');
+      avatarIcon.className = 'material-symbols-outlined';
+      avatarIcon.textContent = 'psychology';
+      avatar.appendChild(avatarIcon);
+      msgDiv.appendChild(avatar);
+    }
+
+    // Content wrapper
     const contentDiv = document.createElement('div');
     contentDiv.className = 'dm-message__content';
+
+    // Message text
     const p = document.createElement('p');
     p.textContent = content;
     contentDiv.appendChild(p);
 
-    if (role === 'assistant') {
-      const avatar = document.createElement('div');
-      avatar.className = 'dm-message__avatar';
-      avatar.innerHTML = '<span class="material-symbols-outlined">psychology</span>';
-      div.appendChild(avatar);
-      div.appendChild(contentDiv);
-    } else {
-      div.appendChild(contentDiv);
+    // Citation chips (assistant only)
+    if (role === 'assistant' && citations && citations.length > 0) {
+      const citRow = document.createElement('div');
+      citRow.className = 'dm-message__citations';
+      citations.forEach(c => {
+        const chip = document.createElement('span');
+        chip.className = 'dm-entity-chip dm-entity-chip--date';
+        chip.textContent = c.page ? `Page ${c.page}` : (c.section || 'Source');
+        citRow.appendChild(chip);
+      });
+      contentDiv.appendChild(citRow);
     }
 
-    chatMessages?.appendChild(div);
+    // Action buttons (assistant only)
+    if (role === 'assistant') {
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'dm-message__actions';
+
+      // Copy button
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'dm-msg-action-btn';
+      copyBtn.title = 'Copy answer';
+      copyBtn.innerHTML = '<span class="material-symbols-outlined">content_copy</span>';
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(content).then(() => {
+          copyBtn.innerHTML = '<span class="material-symbols-outlined">check</span>';
+          setTimeout(() => {
+            copyBtn.innerHTML = '<span class="material-symbols-outlined">content_copy</span>';
+          }, 1500);
+        }).catch(err => {
+          console.error('[DocuMind] Failed to copy to clipboard:', err);
+          copyBtn.innerHTML = '<span class="material-symbols-outlined">error</span>';
+          setTimeout(() => {
+            copyBtn.innerHTML = '<span class="material-symbols-outlined">content_copy</span>';
+          }, 1500);
+        });
+      });
+
+      // Thumbs up
+      const thumbsUp = document.createElement('button');
+      thumbsUp.className = 'dm-msg-action-btn';
+      thumbsUp.title = 'Good answer';
+      thumbsUp.innerHTML = '<span class="material-symbols-outlined">thumb_up</span>';
+      thumbsUp.addEventListener('click', () => {
+        thumbsUp.classList.toggle('dm-msg-action-btn--active');
+        thumbsDown.classList.remove('dm-msg-action-btn--active');
+      });
+
+      // Thumbs down
+      const thumbsDown = document.createElement('button');
+      thumbsDown.className = 'dm-msg-action-btn';
+      thumbsDown.title = 'Bad answer';
+      thumbsDown.innerHTML = '<span class="material-symbols-outlined">thumb_down</span>';
+      thumbsDown.addEventListener('click', () => {
+        thumbsDown.classList.toggle('dm-msg-action-btn--active');
+        thumbsUp.classList.remove('dm-msg-action-btn--active');
+      });
+
+      actionsDiv.appendChild(copyBtn);
+      actionsDiv.appendChild(thumbsUp);
+      actionsDiv.appendChild(thumbsDown);
+      contentDiv.appendChild(actionsDiv);
+    }
+
+    msgDiv.appendChild(contentDiv);
+    chatMessages?.appendChild(msgDiv);
+
+    // Scroll to bottom
+    if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Render follow-up suggestions
+    if (role === 'assistant' && followUps && followUps.length > 0) {
+      renderFollowUpSuggestions(followUps);
+    }
+  }
+
+  // ─── Chat: Typing Indicator ─────────────────────────────────
+  function showTypingIndicator() {
+    hideWelcome();
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'dm-message dm-message--assistant';
+    typingDiv.id = 'typing-indicator';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'dm-message__avatar';
+    avatar.innerHTML = '<span class="material-symbols-outlined">psychology</span>';
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'dm-message__content';
+    contentDiv.innerHTML = `
+      <div class="dm-typing-indicator">
+        <span class="dm-typing-dot"></span>
+        <span class="dm-typing-dot"></span>
+        <span class="dm-typing-dot"></span>
+      </div>
+    `;
+
+    typingDiv.appendChild(avatar);
+    typingDiv.appendChild(contentDiv);
+    chatMessages?.appendChild(typingDiv);
     if (chatMessages) chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
-  chatForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const question = chatInput?.value?.trim();
-    if (!question) return;
+  function removeTypingIndicator() {
+    const indicator = document.getElementById('typing-indicator');
+    if (indicator) indicator.remove();
+  }
 
+  // ─── Chat: Follow-up Suggestions ────────────────────────────
+  function renderFollowUpSuggestions(questions) {
+    if (!chatSuggestions) return;
+    chatSuggestions.innerHTML = '';
+    chatSuggestions.style.display = 'flex';
+
+    questions.forEach(q => {
+      const chip = document.createElement('button');
+      chip.className = 'dm-follow-up dm-follow-up--compact';
+      chip.textContent = q;
+      chip.addEventListener('click', () => {
+        chatInput.value = q;
+        chatSuggestions.style.display = 'none';
+        sendChatMessage(q);
+      });
+      chatSuggestions.appendChild(chip);
+    });
+  }
+
+  function clearFollowUpSuggestions() {
+    if (!chatSuggestions) return;
+    chatSuggestions.innerHTML = '';
+    chatSuggestions.style.display = 'none';
+  }
+
+  // ─── Chat: Send Message ─────────────────────────────────────
+  async function sendChatMessage(question) {
+    if (!question || !question.trim()) return;
+    question = question.trim();
+
+    // Switch to chat tab if not already there
+    switchToTab('chat');
+
+    // Clear input
+    if (chatInput) chatInput.value = '';
+
+    // Add user message
     addMessage('user', question);
-    chatInput.value = '';
 
-    // Typing indicator
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'dm-message dm-message--assistant';
-    typingDiv.innerHTML = `
-      <div class="dm-message__avatar">
-        <span class="material-symbols-outlined">psychology</span>
-      </div>
-      <div class="dm-message__content"><p>Thinking<span class="dm-loading-dots"></span></p></div>
-    `;
-    chatMessages?.appendChild(typingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    // Clear previous follow-up suggestions
+    clearFollowUpSuggestions();
+
+    // Show typing indicator
+    showTypingIndicator();
 
     try {
       if (!currentDocId) {
-        throw new Error("No document has been uploaded or analyzed yet.");
+        throw new Error("No document has been uploaded or analyzed yet. Open a document first.");
       }
 
       const response = await fetch(`${API_BASE}/chat`, {
@@ -384,34 +521,47 @@
         }),
       });
 
-      const data = await response.json();
-      chatMessages?.removeChild(typingDiv);
-
-      addMessage('assistant', data.answer || 'Sorry, I could not generate an answer.');
-
-      // Citation chips
-      if (data.citations?.length) {
-        const citDiv = document.createElement('div');
-        citDiv.style.padding = '0 12px 8px 40px';
-        
-        data.citations.forEach(c => {
-          const chip = document.createElement('span');
-          chip.className = 'dm-entity-chip';
-          chip.textContent = c.section || (c.page ? 'Page ' + c.page : 'Source');
-          citDiv.appendChild(chip);
-          citDiv.appendChild(document.createTextNode(' '));
-        });
-        
-        chatMessages?.appendChild(citDiv);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `Server error: ${response.status}`);
       }
 
+      const data = await response.json();
+      removeTypingIndicator();
+
+      const answer = data.answer || 'Sorry, I could not generate an answer.';
+      addMessage(
+        'assistant',
+        answer,
+        data.citations || [],
+        data.follow_up_questions || []
+      );
+
+      // Update chat history
       chatHistory.push({ role: 'user', content: question });
-      chatHistory.push({ role: 'assistant', content: data.answer });
+      chatHistory.push({ role: 'assistant', content: answer });
+
     } catch (err) {
-      chatMessages?.removeChild(typingDiv);
-      addMessage('assistant', 'Error connecting to DocuMind AI backend: ' + err.message);
+      removeTypingIndicator();
+      addMessage('assistant', `⚠ ${err.message}`, [], []);
       console.error('[DocuMind] Chat error:', err);
     }
+  }
+
+  // ─── Chat: Form Submit ──────────────────────────────────────
+  chatForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const question = chatInput?.value?.trim();
+    if (!question) return;
+    sendChatMessage(question);
+  });
+
+  // ─── Chat: Starter Questions ────────────────────────────────
+  chatStarters?.querySelectorAll('.dm-follow-up')?.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const question = btn.dataset.question;
+      if (question) sendChatMessage(question);
+    });
   });
 
   // ─── Copy Summary Button ────────────────────────────────────

@@ -1,5 +1,5 @@
 /* ============================================================
-   DocuMind AI — Neo-Brutalist Side Panel Styles (F-01)
+   DocuMind AI — Neo-Brutalist Side Panel Styles (F-01 + F-03)
    Design System: 2px black borders, 0px radius, hard shadows,
    Cabinet Grotesk headings, Satoshi body text.
    Matches: design doc/chrome_extension_sidebar reference
@@ -462,14 +462,81 @@ html, body {
   flex: 1;
   overflow-y: auto;
   padding-bottom: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
+/* Chat Welcome State */
+.dm-chat-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-lg) var(--space-md) var(--space-md);
+  gap: var(--space-sm);
+}
+
+.dm-chat-welcome__icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: var(--on-primary);
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.dm-chat-welcome__icon .material-symbols-outlined {
+  font-size: 32px;
+}
+
+.dm-chat-welcome__title {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  color: var(--on-surface);
+  margin-top: 4px;
+}
+
+.dm-chat-welcome__desc {
+  font-size: 12px;
+  color: var(--on-surface-variant);
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.dm-chat-welcome__starters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-top: var(--space-sm);
+}
+
+/* Message bubbles */
 .dm-message {
   display: flex;
   gap: var(--space-sm);
   padding: var(--space-sm);
-  margin-bottom: var(--space-sm);
   border: var(--border);
+  animation: messageSlideIn 0.2s ease-out;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dm-message__avatar {
@@ -479,15 +546,19 @@ html, body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: var(--primary);
+  color: var(--on-primary);
 }
 
 .dm-message__avatar .material-symbols-outlined {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .dm-message__content {
   font-size: 13px;
   line-height: 1.5;
+  flex: 1;
+  min-width: 0;
 }
 
 .dm-message--user {
@@ -506,6 +577,138 @@ html, body {
   color: var(--on-surface);
   margin-right: var(--space-md);
   box-shadow: var(--shadow-sm);
+}
+
+/* Citation chips inside messages */
+.dm-message__citations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Action buttons row below assistant messages */
+.dm-message__actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.dm-msg-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  opacity: 0.5;
+}
+
+.dm-msg-action-btn:hover {
+  opacity: 1;
+  background: var(--surface-container);
+  border-color: var(--on-surface-variant);
+}
+
+.dm-msg-action-btn--active {
+  opacity: 1;
+  background: var(--primary);
+  color: var(--on-primary);
+  border-color: #000;
+}
+
+.dm-msg-action-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+/* Typing Indicator */
+.dm-typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+  align-items: center;
+}
+
+.dm-typing-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--primary);
+  border: 1px solid #000;
+  animation: typingBounce 1.2s ease-in-out infinite;
+}
+
+.dm-typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.dm-typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+/* Follow-up Suggestion Chips */
+.dm-chat__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: var(--space-sm) 0 0;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+.dm-follow-up {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surface-container-high);
+  color: var(--on-surface);
+  border: var(--border);
+  cursor: pointer;
+  transition: all 0.1s ease;
+  text-align: left;
+  line-height: 1.3;
+}
+
+.dm-follow-up:hover {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 2px 2px 0px 0px #000;
+}
+
+.dm-follow-up:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.dm-follow-up .material-symbols-outlined {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.dm-follow-up--compact {
+  font-size: 11px;
+  padding: 6px 10px;
 }
 
 /* ─── Entities ───────────────────────────────────────────── */
@@ -686,22 +889,20 @@ html, body {
 }
 
 
-/**
- * Temporary file to append to sidepanel.css
- */
+/* ─── Skeleton Loader ────────────────────────────────────── */
 .dm-skeleton {
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding: 16px;
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-primary);
-  box-shadow: 4px 4px 0 var(--border-primary);
+  background: var(--surface-container-high);
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
 }
 
 .dm-skeleton__line {
   height: 12px;
-  background: var(--border-primary);
+  background: var(--on-surface-variant);
   border-radius: 2px;
   opacity: 0.1;
   animation: pulse 1.5s infinite;
@@ -717,7 +918,7 @@ html, body {
   100% { opacity: 0.1; }
 }
 
-/* Accordions for Section Breakdown */
+/* ─── Accordions for Section Breakdown ───────────────────── */
 .dm-accordion-group {
   display: flex;
   flex-direction: column;
@@ -725,9 +926,9 @@ html, body {
 }
 
 .dm-accordion {
-  border: 2px solid var(--border-primary);
-  background: var(--bg-primary);
-  box-shadow: 2px 2px 0 var(--border-primary);
+  border: var(--border);
+  background: var(--surface-container);
+  box-shadow: 2px 2px 0 #000;
 }
 
 .dm-accordion__header {
@@ -738,9 +939,10 @@ html, body {
   padding: 12px 16px;
   background: none;
   border: none;
-  font-family: inherit;
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 14px;
+  color: var(--on-surface);
   cursor: pointer;
   text-align: left;
 }
@@ -750,8 +952,8 @@ html, body {
   padding: 0 16px 16px;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--text-secondary);
-  border-top: 2px solid var(--border-primary);
+  color: var(--on-surface-variant);
+  border-top: var(--border);
 }
 
 .dm-accordion--open .dm-accordion__content {
@@ -762,7 +964,7 @@ html, body {
   transform: rotate(180deg);
 }
 
-/* Entity Groups */
+/* ─── Entity Groups ──────────────────────────────────────── */
 .dm-entity-group {
   display: flex;
   flex-direction: column;
@@ -770,10 +972,13 @@ html, body {
 }
 
 .dm-entity-group__title {
+  font-family: var(--font-heading);
   font-size: 12px;
   font-weight: 700;
-  color: var(--text-tertiary);
+  color: var(--on-surface-variant);
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .dm-entity-group__chips {
@@ -782,14 +987,19 @@ html, body {
   gap: 8px;
 }
 
-/* Error Card */
+/* ─── Error Card ─────────────────────────────────────────── */
 .dm-error-card {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: #ffebe5;
+  background: #2a1a1a;
   border: 2px solid #ff4a3d;
-  color: #c92a1f;
+  color: #ffb4ab;
   box-shadow: 4px 4px 0 #ff4a3d;
+}
+
+.dm-error-card .material-symbols-outlined {
+  font-size: 24px;
+  color: #ff4a3d;
 }

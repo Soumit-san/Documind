@@ -1,7 +1,11 @@
 """
-LLM Service — F-02: Instant Document Summarization
+LLM Service — F-02 + F-03: Document Summarization & Conversational Q&A
 Handles summary generation and RAG-based Q&A answer generation.
-Uses Ollama (local Mistral) as primary, with Groq as free-tier cloud fallback.
+
+LLM Routing Chain:
+  1. Google Gemini (primary — fast, free tier, 1M token context)
+  2. Groq (fallback — fast inference, free tier)
+  3. Ollama (local fallback — completely free, no API key)
 """
 
 import json
@@ -38,7 +42,7 @@ def _extract_json(raw: str) -> dict:
         except json.JSONDecodeError:
             pass
 
-    # Try finding the first { ... } block
+    # Try finding the first { ... } block (greedy — outermost braces)
     brace_match = re.search(r"\{.*\}", raw, re.DOTALL)
     if brace_match:
         try:
@@ -46,49 +50,65 @@ def _extract_json(raw: str) -> dict:
         except json.JSONDecodeError:
             pass
 
-    # Give up — return raw text as summary
-    return {"summary": raw.strip(), "citations": []}
+    # Last resort: strip any leading/trailing non-JSON text and retry
+    cleaned = raw.strip()
+    # Remove common LLM prefixes like "Here is the JSON:" etc.
+    cleaned = re.sub(r'^[^{]*', '', cleaned, count=1)
+    cleaned = re.sub(r'[^}]*$', '', cleaned, count=1)
+    if cleaned:
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            pass
+
+    # Give up — return raw text as summary, but clean it first
+    # Strip any JSON artifacts that leaked into the text
+    text = raw.strip()
+    text = re.sub(r'^\s*\{?\s*"summary"\s*:\s*"?', '', text)  # Remove leading {"summary":
+    text = re.sub(r'"?\s*,\s*"citations".*$', '', text, flags=re.DOTALL)  # Remove trailing ,"citations"...
+    text = text.strip(' "}')
+    return {"summary": text or raw.strip(), "citations": []}
 
 
 # ---------------------------------------------------------------------------
-# LLM Call Abstraction
+# LLM Call Abstraction — Provider Implementations
 # ---------------------------------------------------------------------------
-def _call_ollama(prompt: str, system: str = "") -> str:
-    """Call a local Ollama instance (primary LLM) via the /api/chat endpoint."""
+
+def _call_gemini(prompt: str, system: str = "") -> str:
+    """Call Google Gemini API (primary LLM) via the google-genai SDK."""
     settings = get_settings()
-    messages = []
-    if system:
-        messages.append({"role": "system", "content": system})
-    messages.append({"role": "user", "content": prompt})
+    if not settings.gemini_api_key or settings.gemini_api_key.startswith("your-"):
+        raise RuntimeError("Gemini API key not configured")
 
     try:
-        response = httpx.post(
-            f"{settings.ollama_base_url}/api/chat",
-            json={
-                "model": settings.ollama_model,
-                "messages": messages,
-                "stream": False,
-                "options": {
-                    "temperature": 0.3,
-                    "num_predict": 4096,
-                },
-            },
-            timeout=300.0,  # 5 min — Mistral 7B can be slow on first cold request
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=settings.gemini_api_key)
+
+        config = types.GenerateContentConfig(
+            system_instruction=system if system else None,
+            temperature=0.3,
+            max_output_tokens=4096,
         )
-        response.raise_for_status()
-        return response.json().get("message", {}).get("content", "")
-    except (httpx.HTTPError, httpx.TimeoutException, Exception) as e:
-        logger.warning("Ollama call failed: %s — falling back to Groq", str(e))
-        return _call_groq(prompt, system)
+
+        response = client.models.generate_content(
+            model=settings.gemini_model,
+            contents=prompt,
+            config=config,
+        )
+
+        return response.text or ""
+    except Exception as e:
+        logger.warning("Gemini call failed: %s — falling back to Groq", str(e))
+        raise
 
 
 def _call_groq(prompt: str, system: str = "") -> str:
     """Fallback: call Groq API (free tier — fast inference)."""
     settings = get_settings()
     if not settings.groq_api_key or settings.groq_api_key.startswith("your-"):
-        raise RuntimeError(
-            "No LLM available: Ollama unreachable and GROQ_API_KEY not set."
-        )
+        raise RuntimeError("Groq API key not configured")
 
     try:
         from groq import Groq
@@ -109,47 +129,12 @@ def _call_groq(prompt: str, system: str = "") -> str:
 
         return chat_completion.choices[0].message.content or ""
     except Exception as e:
-        logger.error("Groq call failed: %s", str(e))
-        raise RuntimeError(f"All LLM providers failed. Groq error: {str(e)}")
+        logger.warning("Groq call failed: %s", str(e))
+        raise
 
 
-def _call_llm(prompt: str, system: str = "") -> str:
-    """Route to the best available LLM: Groq (fast cloud) → Ollama (local fallback)."""
-    return _call_groq_primary(prompt, system)
-
-
-def _call_groq_primary(prompt: str, system: str = "") -> str:
-    """Primary: Groq API (fast, free tier). Falls back to Ollama if unavailable."""
-    settings = get_settings()
-    if not settings.groq_api_key or settings.groq_api_key.startswith("your-"):
-        logger.info("No Groq API key configured — trying Ollama")
-        return _call_ollama_standalone(prompt, system)
-
-    try:
-        from groq import Groq
-
-        client = Groq(api_key=settings.groq_api_key)
-
-        messages = []
-        if system:
-            messages.append({"role": "system", "content": system})
-        messages.append({"role": "user", "content": prompt})
-
-        chat_completion = client.chat.completions.create(
-            messages=messages,
-            model=settings.groq_model,
-            temperature=0.3,
-            max_tokens=4096,
-        )
-
-        return chat_completion.choices[0].message.content or ""
-    except Exception as e:
-        logger.warning("Groq call failed: %s — falling back to Ollama", str(e))
-        return _call_ollama_standalone(prompt, system)
-
-
-def _call_ollama_standalone(prompt: str, system: str = "") -> str:
-    """Standalone Ollama call (no further fallback). Raises on failure."""
+def _call_ollama(prompt: str, system: str = "") -> str:
+    """Local fallback: call Ollama instance. Raises on failure."""
     settings = get_settings()
     messages = []
     if system:
@@ -174,6 +159,38 @@ def _call_ollama_standalone(prompt: str, system: str = "") -> str:
         return response.json().get("message", {}).get("content", "")
     except Exception as e:
         raise RuntimeError(f"Ollama also failed: {str(e)}")
+
+
+def _call_llm(prompt: str, system: str = "") -> str:
+    """
+    Route to the best available LLM with automatic fallback.
+    Chain: Gemini → Groq → Ollama
+    """
+    # 1. Try Gemini (primary)
+    try:
+        result = _call_gemini(prompt, system)
+        logger.info("[Gemini] Response received successfully")
+        return result
+    except Exception as e:
+        logger.warning("[Gemini] Failed: %s — trying Groq", str(e)[:100])
+
+    # 2. Try Groq (secondary)
+    try:
+        result = _call_groq(prompt, system)
+        logger.info("[Groq] Response received successfully")
+        return result
+    except Exception as e:
+        logger.warning("[Groq] Failed: %s — trying Ollama", str(e)[:100])
+
+    # 3. Try Ollama (last resort)
+    try:
+        result = _call_ollama(prompt, system)
+        logger.info("[Ollama] Response received successfully")
+        return result
+    except Exception as e:
+        raise RuntimeError(
+            f"All LLM providers failed. Last error (Ollama): {str(e)}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -311,17 +328,22 @@ def generate_tiered_summary(text: str, pages: list[str] | None = None) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# RAG Answer Generation
+# RAG Answer Generation — F-03
 # ---------------------------------------------------------------------------
-QA_SYSTEM_PROMPT = """You are DocuMind AI, an expert document Q&A assistant.
-Answer the user's question based ONLY on the provided context chunks.
-If the answer is not in the context, say "I couldn't find this information in the document."
-NEVER hallucinate or make up information.
-Always cite which chunk/section your answer comes from.
-Suggest 2-3 relevant follow-up questions the user might ask.
+QA_SYSTEM_PROMPT = """You are DocuMind AI, an intelligent document Q&A assistant.
+Your primary knowledge comes from the provided document context chunks.
+
+Rules:
+1. ALWAYS answer the user's question as helpfully and thoroughly as possible.
+2. Use the document context chunks as your PRIMARY source. Cite pages when referencing specific document content.
+3. If the document mentions a topic (e.g. a person's name, a term, an organization), use what the document says AND supplement with relevant general knowledge to give a complete answer.
+4. If the document does NOT contain information about the topic at all, say so clearly but still try to give a helpful general answer if you can.
+5. NEVER refuse to answer. Always provide the best response you can.
+6. When citing document content, use inline page references like (Page 3).
+7. Suggest 2-3 relevant follow-up questions the user might ask about the document.
 
 Respond in this JSON format (no markdown code blocks):
-{"answer": "...", "citations": [{"text": "...", "page": null, "section": "chunk N"}], "follow_up_questions": ["...", "..."]}"""
+{"answer": "Your detailed answer here with inline citations like (Page 3).", "citations": [{"text": "quoted excerpt", "page": 3, "section": "relevant section"}], "follow_up_questions": ["Question 1?", "Question 2?", "Question 3?"]}"""
 
 
 def generate_answer(
@@ -332,10 +354,11 @@ def generate_answer(
     """
     Generate a grounded, cited answer using retrieved context chunks.
     """
-    # Format context
+    # Format context with page numbers
     context_str = ""
     for i, chunk in enumerate(context_chunks):
-        context_str += f"\n--- Chunk {i + 1} (relevance: {chunk.get('score', 'N/A')}) ---\n{chunk['text']}\n"
+        page_info = f", page: {chunk['page']}" if chunk.get('page') else ""
+        context_str += f"\n--- Chunk {i + 1} (relevance: {chunk.get('score', 'N/A')}{page_info}) ---\n{chunk['text']}\n"
 
     # Format chat history
     history_str = ""
