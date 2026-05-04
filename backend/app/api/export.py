@@ -9,6 +9,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional
 import io
+import re
 
 from app.core.auth import get_user_from_token
 from app.services.export import generate_pdf, generate_docx
@@ -44,7 +45,8 @@ async def export_pdf(content: ExportContent, authorization: str = Header(None)):
         chat_messages=content.chat_messages,
     )
 
-    safe_filename = content.title.replace(" ", "_")[:50] + "_analysis.pdf"
+    safe_title = re.sub(r'[^\w\-\.]', '_', content.title)
+    safe_filename = f"{safe_title[:50]}_analysis.pdf"
 
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
@@ -70,7 +72,8 @@ async def export_docx(content: ExportContent, authorization: str = Header(None))
         chat_messages=content.chat_messages,
     )
 
-    safe_filename = content.title.replace(" ", "_")[:50] + "_analysis.docx"
+    safe_title = re.sub(r'[^\w\-\.]', '_', content.title)
+    safe_filename = f"{safe_title[:50]}_analysis.docx"
 
     return StreamingResponse(
         io.BytesIO(docx_bytes),

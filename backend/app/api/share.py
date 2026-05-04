@@ -6,8 +6,9 @@ import logging
 from typing import Optional
 
 import bcrypt
-from fastapi import APIRouter, Header, HTTPException, Query
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
+from datetime import datetime, timezone
 
 from app.core.auth import get_user_from_token
 from app.core.supabase_client import get_supabase_admin_client
@@ -36,6 +37,9 @@ class SharedContent(BaseModel):
     title: str
     content: dict
     created_at: str
+
+class ShareAccessRequest(BaseModel):
+    password: Optional[str] = None
 
 
 # ── Endpoints ────────────────────────────────────────────────────────────
@@ -78,11 +82,11 @@ async def create_share(req: ShareCreateRequest, authorization: str = Header(None
         raise HTTPException(status_code=500, detail="Failed to create share.")
 
 
-@router.get("/share/{share_id}", response_model=SharedContent)
-async def get_share(share_id: str, password: Optional[str] = Query(None)):
+@router.post("/share/{share_id}", response_model=SharedContent)
+async def access_share(share_id: str, req: ShareAccessRequest):
     """
     Retrieve a shared analysis. If password-protected, the correct password
-    must be provided as a query parameter.
+    must be provided in the request body.
     """
     supabase = get_supabase_admin_client()
 
@@ -101,11 +105,17 @@ async def get_share(share_id: str, password: Optional[str] = Query(None)):
     if not share:
         raise HTTPException(status_code=404, detail="Share not found.")
 
+    # Check expiration
+    if share.get("expires_at"):
+        expires_at = datetime.fromisoformat(share["expires_at"].replace("Z", "+00:00"))
+        if expires_at < datetime.now(timezone.utc):
+            raise HTTPException(status_code=410, detail="This share link has expired.")
+
     # Check password if protected
     if share.get("password_hash"):
-        if not password:
+        if not req.password:
             raise HTTPException(status_code=401, detail="This share is password-protected.")
-        if not bcrypt.checkpw(password.encode("utf-8"), share["password_hash"].encode("utf-8")):
+        if not bcrypt.checkpw(req.password.encode("utf-8"), share["password_hash"].encode("utf-8")):
             raise HTTPException(status_code=403, detail="Incorrect password.")
 
     return SharedContent(

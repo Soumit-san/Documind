@@ -24,4 +24,5 @@ USING (auth.uid() = user_id);
 -- Anyone can read shared analyses (password check happens in API layer)
 CREATE POLICY "Public read for shared analyses"
 ON public.shared_analyses FOR SELECT
-USING (true);
+USING (expires_at IS NULL OR expires_at > now());
+

@@ -40,10 +40,14 @@ export default function ShareViewPage() {
     setPasswordError(null);
     try {
       const url = new URL(`${API_URL}/share/${shareId}`);
-      if (pw) url.searchParams.append("password", pw);
 
-      const res = await fetch(url.toString());
-      const json = await res.json();
+      const res = await fetch(url.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ password: pw || null }),
+      });
 
       if (res.status === 401) {
         setNeedsPassword(true);
@@ -55,7 +59,13 @@ export default function ShareViewPage() {
         setLoading(false);
         return;
       }
-      if (!res.ok) throw new Error(json.detail || "Share not found");
+
+      let json = null;
+      if (res.headers.get("content-type")?.includes("application/json")) {
+        json = await res.json();
+      }
+
+      if (!res.ok) throw new Error(json?.detail || "Share not found or expired");
 
       setData(json);
       setNeedsPassword(false);
