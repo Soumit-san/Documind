@@ -26,3 +26,7 @@ google-genai>=1.0.0
 
 # CORS & Security
 starlette==0.46.2
+
+# Export & Share
+reportlab>=4.0.0
+bcrypt>=4.0.0
