@@ -67,11 +67,11 @@ This TODO list is derived from the PRD, Tech Stack, and Design specifications, b
 
 ### F-05: Export & Share
 - **Backend**
-  - [ ] Create API endpoints for generating PDF/DOCX from summaries.
-  - [ ] Implement link-sharing functionality with optional password protection.
+  - [x] Create API endpoints for generating PDF/DOCX from summaries.
+  - [x] Implement link-sharing functionality with optional password protection.
 - **Frontend**
-  - [ ] Build Export tab UI with "Copy to clipboard" and file download options.
-  - [ ] Add share button and password configuration modal in Web App.
+  - [x] Build Export tab UI with "Copy to clipboard" and file download options.
+  - [x] Add share button and password configuration modal in Web App.
 
 ---
 

@@ -52,6 +52,14 @@ export default function DocumentPage() {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [feedbackState, setFeedbackState] = useState<Record<number, "up" | "down" | null>>({});
 
+  // Export & Share state
+  const [exporting, setExporting] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharePassword, setSharePassword] = useState("");
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareCreating, setShareCreating] = useState(false);
+  const [clipboardMsg, setClipboardMsg] = useState<string | null>(null);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { router.replace("/login"); return; }
@@ -169,6 +177,100 @@ export default function DocumentPage() {
     { icon: "⚠️", text: "Are there any risks or concerns mentioned?" },
   ];
 
+  function getExportPayload() {
+    return {
+      title: `Document ${docId.slice(0, 16)}`,
+      executive_summary: executive || "",
+      sections: sections.length > 0 ? sections : null,
+      entities: entities || null,
+      citations: citations.length > 0 ? citations : null,
+      chat_messages: chatMessages.length > 0 ? chatMessages.map(m => ({ role: m.role, content: m.content })) : null,
+    };
+  }
+
+  async function handleExport(format: "pdf" | "docx") {
+    if (!token) return;
+    setExporting(true);
+    try {
+      const res = await fetch(`${API_URL}/export/${format}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(getExportPayload()),
+      });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `analysis.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Export failed");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleCopyAll() {
+    let text = "";
+    if (executive) text += `EXECUTIVE SUMMARY\n${executive}\n\n`;
+    if (sections.length > 0) {
+      text += "SECTION BREAKDOWN\n";
+      sections.forEach(s => { text += `${s.title}: ${s.summary}\n`; });
+      text += "\n";
+    }
+    if (entities) {
+      text += "KEY ENTITIES\n";
+      Object.entries(entities).forEach(([k, v]) => { if (v?.length) text += `${k}: ${v.join(", ")}\n`; });
+      text += "\n";
+    }
+    if (chatMessages.length > 0) {
+      text += "CHAT TRANSCRIPT\n";
+      chatMessages.forEach(m => { text += `${m.role === "user" ? "You" : "DocuMind AI"}: ${m.content}\n`; });
+    }
+    try {
+      await navigator.clipboard.writeText(text.trim());
+      setClipboardMsg("Copied!");
+      setTimeout(() => setClipboardMsg(null), 2000);
+    } catch {
+      setClipboardMsg("Failed");
+      setTimeout(() => setClipboardMsg(null), 2000);
+    }
+  }
+
+  async function handleCreateShare() {
+    if (!token) return;
+    setShareCreating(true);
+    try {
+      const res = await fetch(`${API_URL}/share`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          document_id: docId,
+          title: `Document ${docId.slice(0, 16)}`,
+          content: getExportPayload(),
+          password: sharePassword || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Share failed");
+      setShareUrl(`${window.location.origin}${data.share_url}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Share failed");
+    } finally {
+      setShareCreating(false);
+    }
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: "var(--surface)", display: "flex", flexDirection: "column" }}>
       {/* Navbar */}
@@ -204,12 +306,139 @@ export default function DocumentPage() {
           </div>
         )}
 
-        {/* Tabs */}
-        <div style={{ display: "flex", gap: "0", marginBottom: "32px", flexWrap: "wrap" }}>
-          <button style={tabStyle("summary")} onClick={() => setActiveTab("summary")}>📝 SUMMARY</button>
-          <button style={tabStyle("chat")} onClick={() => setActiveTab("chat")}>💬 Q&A CHAT</button>
-          <button style={tabStyle("entities")} onClick={() => setActiveTab("entities")}>🏷 ENTITIES</button>
+        {/* Tabs + Export Toolbar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px", flexWrap: "wrap", gap: "12px" }}>
+          <div style={{ display: "flex", gap: "0" }}>
+            <button style={tabStyle("summary")} onClick={() => setActiveTab("summary")}>📝 SUMMARY</button>
+            <button style={tabStyle("chat")} onClick={() => setActiveTab("chat")}>💬 Q&A CHAT</button>
+            <button style={tabStyle("entities")} onClick={() => setActiveTab("entities")}>🏷 ENTITIES</button>
+          </div>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <button
+              onClick={handleCopyAll}
+              disabled={!executive && chatMessages.length === 0}
+              style={{
+                padding: "8px 14px", fontSize: "12px", fontWeight: 700,
+                border: "2px solid #000", cursor: "pointer",
+                background: clipboardMsg === "Copied!" ? "var(--primary)" : "var(--surface-container)",
+                color: clipboardMsg === "Copied!" ? "#000" : "var(--on-surface)",
+                transition: "all 0.15s",
+              }}
+            >
+              {clipboardMsg || "📋 COPY"}
+            </button>
+            <button
+              onClick={() => handleExport("pdf")}
+              disabled={exporting || (!executive && chatMessages.length === 0)}
+              style={{
+                padding: "8px 14px", fontSize: "12px", fontWeight: 700,
+                border: "2px solid #000", cursor: "pointer",
+                background: "var(--surface-container)", color: "var(--on-surface)",
+              }}
+            >
+              {exporting ? "⏳" : "📄 PDF"}
+            </button>
+            <button
+              onClick={() => handleExport("docx")}
+              disabled={exporting || (!executive && chatMessages.length === 0)}
+              style={{
+                padding: "8px 14px", fontSize: "12px", fontWeight: 700,
+                border: "2px solid #000", cursor: "pointer",
+                background: "var(--surface-container)", color: "var(--on-surface)",
+              }}
+            >
+              {exporting ? "⏳" : "📝 DOCX"}
+            </button>
+            <button
+              onClick={() => { setShowShareModal(true); setShareUrl(null); setSharePassword(""); }}
+              disabled={!executive && chatMessages.length === 0}
+              style={{
+                padding: "8px 14px", fontSize: "12px", fontWeight: 700,
+                border: "2px solid #000", cursor: "pointer",
+                background: "var(--tertiary-container)", color: "var(--on-tertiary-container)",
+              }}
+            >
+              🔗 SHARE
+            </button>
+          </div>
         </div>
+
+        {/* Share Modal */}
+        {showShareModal && (
+          <div style={{
+            position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
+            background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center",
+            justifyContent: "center", zIndex: 1000,
+          }} onClick={() => setShowShareModal(false)}>
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "var(--surface-container)", border: "3px solid #000",
+                boxShadow: "8px 8px 0 #000", padding: "32px", width: "100%",
+                maxWidth: "480px", animation: "chatMsgIn 0.2s ease-out",
+              }}
+            >
+              <h3 style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "20px", marginBottom: "20px" }}>
+                🔗 CREATE SHARE LINK
+              </h3>
+
+              {!shareUrl ? (
+                <>
+                  <label style={{ fontSize: "13px", fontWeight: 700, color: "var(--on-surface-variant)", display: "block", marginBottom: "8px" }}>
+                    Password (optional)
+                  </label>
+                  <input
+                    type="password"
+                    className="nb-input"
+                    placeholder="Leave empty for no password"
+                    value={sharePassword}
+                    onChange={(e) => setSharePassword(e.target.value)}
+                    style={{ width: "100%", marginBottom: "20px" }}
+                  />
+                  <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                    <button onClick={() => setShowShareModal(false)} className="nb-btn nb-btn--ghost">Cancel</button>
+                    <button onClick={handleCreateShare} className="nb-btn nb-btn--primary" disabled={shareCreating}>
+                      {shareCreating ? "⏳ Creating..." : "CREATE LINK"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: "13px", color: "var(--on-surface-variant)", marginBottom: "12px" }}>
+                    Your share link is ready! Anyone with this link can view the analysis.
+                  </p>
+                  <div style={{
+                    display: "flex", gap: "8px", padding: "12px",
+                    background: "var(--surface-container-high)", border: "2px solid #000",
+                  }}>
+                    <input
+                      type="text" readOnly value={shareUrl}
+                      style={{
+                        flex: 1, background: "transparent", border: "none",
+                        color: "var(--primary)", fontSize: "13px", fontWeight: 700,
+                        outline: "none",
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(shareUrl);
+                        setClipboardMsg("Link copied!");
+                        setTimeout(() => setClipboardMsg(null), 2000);
+                      }}
+                      className="nb-btn nb-btn--primary"
+                      style={{ padding: "6px 14px", fontSize: "12px" }}
+                    >
+                      📋 COPY
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "16px" }}>
+                    <button onClick={() => setShowShareModal(false)} className="nb-btn nb-btn--ghost">Close</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Summary Tab */}
         {activeTab === "summary" && (

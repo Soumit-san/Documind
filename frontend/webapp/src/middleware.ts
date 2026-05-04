@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * Middleware to refresh Supabase auth session on every request.
  * This keeps the user logged in across page navigations.
  */
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
