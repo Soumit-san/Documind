@@ -890,7 +890,7 @@ export default function DocumentPage() {
           style={{
             position: "absolute",
             top: Math.max(10, selectionRect.top + window.scrollY - (annotationResult ? 180 : 70)),
-            left: Math.max(10, selectionRect.left + window.scrollX - 20),
+            left: Math.min(Math.max(10, selectionRect.left + window.scrollX - 20), window.innerWidth - 350),
             zIndex: 1000,
             background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
             border: "2px solid #ffe17c",
