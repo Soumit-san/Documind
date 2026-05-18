@@ -60,11 +60,42 @@ export default function DocumentPage() {
   const [shareCreating, setShareCreating] = useState(false);
   const [clipboardMsg, setClipboardMsg] = useState<string | null>(null);
 
+  // Annotation state (F-06)
+  const [selectedText, setSelectedText] = useState("");
+  const [selectionRect, setSelectionRect] = useState<DOMRect | null>(null);
+  const [annotationLoading, setAnnotationLoading] = useState(false);
+  const [annotationResult, setAnnotationResult] = useState<{ action: string; text: string } | null>(null);
+  const [translationLang, setTranslationLang] = useState("Spanish");
+  const annotationMenuRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { router.replace("/login"); return; }
       setToken(session.access_token);
     });
+
+    const handleMouseUp = (e: MouseEvent) => {
+      if (annotationMenuRef.current && annotationMenuRef.current.contains(e.target as Node)) {
+        return; // Clicked inside the menu, ignore
+      }
+      setTimeout(() => {
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim().length > 0) {
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          setSelectedText(selection.toString().trim());
+          setSelectionRect(rect);
+          setAnnotationResult(null); // Clear previous result when new selection is made
+        } else {
+          setSelectedText("");
+          setSelectionRect(null);
+          setAnnotationResult(null);
+        }
+      }, 10);
+    };
+
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => document.removeEventListener("mouseup", handleMouseUp);
   }, []);
 
   // Auto-scroll chat to bottom
@@ -140,6 +171,35 @@ export default function DocumentPage() {
       ]);
     } finally {
       setChatLoading(false);
+    }
+  }
+
+  async function handleAnnotation(action: string) {
+    if (!selectedText || !token) return;
+    setAnnotationLoading(true);
+    setAnnotationResult(null);
+
+    try {
+      const res = await fetch(`${API_URL}/annotations`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          text: selectedText,
+          action,
+          language: action === "translate" ? translationLang : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Annotation failed");
+      
+      setAnnotationResult({ action, text: data.result });
+    } catch (e: unknown) {
+      setAnnotationResult({ action: "error", text: `⚠ ${e instanceof Error ? e.message : "Failed to analyze text."}` });
+    } finally {
+      setAnnotationLoading(false);
     }
   }
 
@@ -816,6 +876,200 @@ export default function DocumentPage() {
         )}
       </main>
 
+      {/* Floating Annotation Menu (F-06) */}
+      {selectedText && selectionRect && (
+        <div
+          ref={annotationMenuRef}
+          style={{
+            position: "absolute",
+            top: selectionRect.top + window.scrollY - (annotationResult ? 180 : 70),
+            left: Math.max(10, selectionRect.left + window.scrollX - 20),
+            zIndex: 1000,
+            background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+            border: "2px solid #ffe17c",
+            boxShadow: "0 0 20px rgba(255, 225, 124, 0.3), 6px 6px 0 #000",
+            padding: "10px 12px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "8px",
+            animation: "annotationSlideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            maxWidth: "420px",
+            minWidth: "340px",
+          }}
+        >
+          {/* Decorative top strip */}
+          <div style={{
+            height: "3px",
+            background: "linear-gradient(90deg, #ffe17c, #91f1fd, #ff6b9d, #ffe17c)",
+            marginBottom: "4px",
+            borderRadius: "2px",
+          }} />
+
+          {annotationResult ? (
+            <div style={{ padding: "6px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                <span style={{
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.1em",
+                  padding: "3px 10px",
+                  border: "2px solid",
+                  color: annotationResult.action === "explain" ? "#ffe17c"
+                    : annotationResult.action === "translate" ? "#91f1fd"
+                    : annotationResult.action === "suggest" ? "#ff6b9d"
+                    : "#ff4a3d",
+                  borderColor: annotationResult.action === "explain" ? "#ffe17c"
+                    : annotationResult.action === "translate" ? "#91f1fd"
+                    : annotationResult.action === "suggest" ? "#ff6b9d"
+                    : "#ff4a3d",
+                  background: annotationResult.action === "explain" ? "rgba(255,225,124,0.15)"
+                    : annotationResult.action === "translate" ? "rgba(145,241,253,0.15)"
+                    : annotationResult.action === "suggest" ? "rgba(255,107,157,0.15)"
+                    : "rgba(255,74,61,0.15)",
+                }}>
+                  {annotationResult.action === "explain" ? "💡 " : annotationResult.action === "translate" ? "🌍 " : annotationResult.action === "suggest" ? "✨ " : "⚠ "}
+                  {annotationResult.action}
+                </span>
+                <button
+                  onClick={() => { setAnnotationResult(null); setSelectedText(""); setSelectionRect(null); }}
+                  style={{
+                    background: "rgba(255,255,255,0.1)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    cursor: "pointer",
+                    fontSize: "12px",
+                    padding: "2px 8px",
+                    color: "#ccc",
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,74,61,0.3)"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.1)"; (e.currentTarget as HTMLElement).style.color = "#ccc"; }}
+                >
+                  ✕
+                </button>
+              </div>
+              <p style={{
+                fontSize: "13px",
+                lineHeight: 1.65,
+                margin: 0,
+                color: "#e0e0e0",
+                maxHeight: "200px",
+                overflowY: "auto",
+                padding: "8px 10px",
+                background: "rgba(0,0,0,0.25)",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}>
+                {annotationResult.text}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+              {/* Explain Button — Gold */}
+              <button
+                onClick={() => handleAnnotation("explain")}
+                disabled={annotationLoading}
+                style={{
+                  background: annotationLoading ? "rgba(255,225,124,0.2)" : "linear-gradient(135deg, #ffe17c, #e1c563)",
+                  color: "#1a1a2e",
+                  border: "2px solid #ffe17c",
+                  cursor: annotationLoading ? "wait" : "pointer",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  padding: "8px 14px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em",
+                  transition: "all 0.15s ease",
+                  boxShadow: "2px 2px 0 rgba(0,0,0,0.5)",
+                }}
+                onMouseEnter={(e) => { if (!annotationLoading) { (e.currentTarget as HTMLElement).style.transform = "translate(1px,1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "1px 1px 0 rgba(0,0,0,0.5)"; }}}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "none"; (e.currentTarget as HTMLElement).style.boxShadow = "2px 2px 0 rgba(0,0,0,0.5)"; }}
+              >
+                {annotationLoading ? "⏳" : "💡 Explain"}
+              </button>
+
+              {/* Translate Button + Dropdown — Cyan */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                border: "2px solid #91f1fd",
+                background: "linear-gradient(135deg, rgba(145,241,253,0.15), rgba(0,111,121,0.3))",
+                boxShadow: "2px 2px 0 rgba(0,0,0,0.5)",
+              }}>
+                <button
+                  onClick={() => handleAnnotation("translate")}
+                  disabled={annotationLoading}
+                  style={{
+                    background: "transparent",
+                    color: "#91f1fd",
+                    border: "none",
+                    borderRight: "2px solid #91f1fd",
+                    cursor: annotationLoading ? "wait" : "pointer",
+                    fontSize: "12px",
+                    fontWeight: 800,
+                    padding: "8px 10px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.03em",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => { if (!annotationLoading) (e.currentTarget as HTMLElement).style.background = "rgba(145,241,253,0.2)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
+                  {annotationLoading ? "⏳" : "🌍 Translate"}
+                </button>
+                <select
+                  value={translationLang}
+                  onChange={(e) => setTranslationLang(e.target.value)}
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    outline: "none",
+                    padding: "8px 6px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    color: "#91f1fd",
+                  }}
+                >
+                  <option value="Spanish" style={{ background: "#16213e" }}>Spanish</option>
+                  <option value="French" style={{ background: "#16213e" }}>French</option>
+                  <option value="German" style={{ background: "#16213e" }}>German</option>
+                  <option value="Hindi" style={{ background: "#16213e" }}>Hindi</option>
+                  <option value="Japanese" style={{ background: "#16213e" }}>Japanese</option>
+                  <option value="Chinese" style={{ background: "#16213e" }}>Chinese</option>
+                  <option value="Korean" style={{ background: "#16213e" }}>Korean</option>
+                  <option value="Arabic" style={{ background: "#16213e" }}>Arabic</option>
+                  <option value="Portuguese" style={{ background: "#16213e" }}>Portuguese</option>
+                  <option value="Russian" style={{ background: "#16213e" }}>Russian</option>
+                </select>
+              </div>
+
+              {/* Suggest Button — Pink */}
+              <button
+                onClick={() => handleAnnotation("suggest")}
+                disabled={annotationLoading}
+                style={{
+                  background: annotationLoading ? "rgba(255,107,157,0.2)" : "linear-gradient(135deg, #ff6b9d, #c94b77)",
+                  color: "#fff",
+                  border: "2px solid #ff6b9d",
+                  cursor: annotationLoading ? "wait" : "pointer",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  padding: "8px 14px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.03em",
+                  transition: "all 0.15s ease",
+                  boxShadow: "2px 2px 0 rgba(0,0,0,0.5)",
+                }}
+                onMouseEnter={(e) => { if (!annotationLoading) { (e.currentTarget as HTMLElement).style.transform = "translate(1px,1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "1px 1px 0 rgba(0,0,0,0.5)"; }}}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.transform = "none"; (e.currentTarget as HTMLElement).style.boxShadow = "2px 2px 0 rgba(0,0,0,0.5)"; }}
+              >
+                {annotationLoading ? "⏳" : "✨ Suggest"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       <style>{`
         @keyframes pulse {
           0% { opacity: 0.15; }
@@ -829,6 +1083,10 @@ export default function DocumentPage() {
         @keyframes typingBounce {
           0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
           30% { transform: translateY(-8px); opacity: 1; }
+        }
+        @keyframes annotationSlideIn {
+          from { opacity: 0; transform: translateY(12px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
       `}</style>
     </div>

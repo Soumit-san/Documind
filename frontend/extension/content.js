@@ -257,6 +257,166 @@
     }, extractionDelay);
   }
 
+  // ─── Smart Annotations (F-06) ─────────────────────────────────
+
+  let annotationMenu = null;
+  let annotationPopup = null;
+
+  function createFloatingMenu(rect, selectedText) {
+    if (annotationMenu) annotationMenu.remove();
+    if (annotationPopup) annotationPopup.remove();
+
+    annotationMenu = document.createElement('div');
+    annotationMenu.style.cssText = `
+      position: absolute;
+      top: ${rect.top + window.scrollY - 60}px;
+      left: ${rect.left + window.scrollX}px;
+      z-index: 2147483647;
+      background: #f4f4f0;
+      border: 2px solid #000;
+      box-shadow: 4px 4px 0 #000;
+      padding: 8px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-family: system-ui, -apple-system, sans-serif;
+      animation: documindMsgIn 0.2s ease-out;
+    `;
+
+    const btnStyle = `
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      color: #000;
+      transition: all 0.1s;
+    `;
+
+    const explainBtn = document.createElement('button');
+    explainBtn.innerText = '💡 Explain';
+    explainBtn.style.cssText = btnStyle;
+    explainBtn.onmouseover = () => explainBtn.style.background = '#e0e0dc';
+    explainBtn.onmouseout = () => explainBtn.style.background = 'transparent';
+    explainBtn.onclick = () => handleAnnotationClick('explain', selectedText, rect);
+
+    const translateContainer = document.createElement('div');
+    translateContainer.style.cssText = `display: flex; align-items: center; border: 2px solid #000;`;
+    
+    const translateBtn = document.createElement('button');
+    translateBtn.innerText = '🌍 Translate';
+    translateBtn.style.cssText = btnStyle + 'border-right: 2px solid #000;';
+    translateBtn.onmouseover = () => translateBtn.style.background = '#e0e0dc';
+    translateBtn.onmouseout = () => translateBtn.style.background = 'transparent';
+
+    const langSelect = document.createElement('select');
+    langSelect.style.cssText = `background: transparent; border: none; outline: none; padding: 6px; font-size: 12px; font-weight: 700; cursor: pointer;`;
+    ['Spanish', 'French', 'German', 'Hindi', 'Japanese', 'Chinese'].forEach(lang => {
+      const opt = document.createElement('option');
+      opt.value = lang;
+      opt.innerText = lang;
+      langSelect.appendChild(opt);
+    });
+
+    translateBtn.onclick = () => handleAnnotationClick('translate', selectedText, rect, langSelect.value);
+    
+    translateContainer.appendChild(translateBtn);
+    translateContainer.appendChild(langSelect);
+
+    const suggestBtn = document.createElement('button');
+    suggestBtn.innerText = '✨ Suggest';
+    suggestBtn.style.cssText = btnStyle;
+    suggestBtn.onmouseover = () => suggestBtn.style.background = '#e0e0dc';
+    suggestBtn.onmouseout = () => suggestBtn.style.background = 'transparent';
+    suggestBtn.onclick = () => handleAnnotationClick('suggest', selectedText, rect);
+
+    annotationMenu.appendChild(explainBtn);
+    annotationMenu.appendChild(translateContainer);
+    annotationMenu.appendChild(suggestBtn);
+
+    document.body.appendChild(annotationMenu);
+  }
+
+  function showAnnotationResult(rect, action, result) {
+    if (annotationMenu) annotationMenu.remove();
+    if (annotationPopup) annotationPopup.remove();
+
+    annotationPopup = document.createElement('div');
+    annotationPopup.style.cssText = `
+      position: absolute;
+      top: ${rect.top + window.scrollY - 120}px;
+      left: ${rect.left + window.scrollX}px;
+      z-index: 2147483647;
+      background: #f4f4f0;
+      border: 2px solid #000;
+      box-shadow: 4px 4px 0 #000;
+      padding: 16px;
+      max-width: 350px;
+      font-family: system-ui, -apple-system, sans-serif;
+      animation: documindMsgIn 0.2s ease-out;
+    `;
+
+    const header = document.createElement('div');
+    header.style.cssText = `display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;`;
+    
+    const title = document.createElement('span');
+    title.innerText = action.toUpperCase();
+    title.style.cssText = `font-size: 11px; font-weight: 800; color: #ff4a3d; letter-spacing: 0.05em;`;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.innerText = '✖';
+    closeBtn.style.cssText = `background: none; border: none; cursor: pointer; font-size: 14px; padding: 0;`;
+    closeBtn.onclick = () => annotationPopup.remove();
+
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    const content = document.createElement('p');
+    content.innerText = result;
+    content.style.cssText = `font-size: 13px; line-height: 1.5; margin: 0; color: #000;`;
+
+    annotationPopup.appendChild(header);
+    annotationPopup.appendChild(content);
+
+    document.body.appendChild(annotationPopup);
+  }
+
+  function handleAnnotationClick(action, text, rect, language = null) {
+    if (annotationMenu) {
+      annotationMenu.innerHTML = '<span style="padding: 6px 12px; font-size: 12px; font-weight: 700;">⏳ Loading...</span>';
+    }
+    chrome.runtime.sendMessage({
+      type: 'ANNOTATE_TEXT',
+      data: { text, action, language }
+    }, response => {
+      if (response && response.success) {
+        showAnnotationResult(rect, action, response.result);
+      } else {
+        showAnnotationResult(rect, 'error', response ? response.error : 'Failed to get response');
+      }
+    });
+  }
+
+  document.addEventListener('mouseup', (e) => {
+    // Ignore clicks inside our own menus
+    if (annotationMenu && annotationMenu.contains(e.target)) return;
+    if (annotationPopup && annotationPopup.contains(e.target)) return;
+
+    setTimeout(() => {
+      const selection = window.getSelection();
+      const text = selection.toString().trim();
+      
+      if (text.length > 0) {
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        createFloatingMenu(rect, text);
+      } else {
+        if (annotationMenu) { annotationMenu.remove(); annotationMenu = null; }
+      }
+    }, 10);
+  });
+
   // Run on load
   if (document.readyState === 'complete') {
     init();

@@ -328,6 +328,38 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep channel open for async response
   }
 
+  // --- Smart Annotations (F-06) ---
+  if (message.type === 'ANNOTATE_TEXT') {
+    chrome.storage.local.get(['supabaseToken'], (result) => {
+      const token = result.supabaseToken;
+      if (!token) {
+        sendResponse({ success: false, error: 'Not authenticated. Please log in to the DocuMind Web App.' });
+        return;
+      }
+
+      fetch('http://127.0.0.1:8000/api/annotations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          text: message.data.text,
+          action: message.data.action,
+          language: message.data.language,
+        }),
+      })
+      .then(async r => {
+        const result = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(result.detail || 'Annotation failed');
+        return result;
+      })
+      .then(data => sendResponse({ success: true, result: data.result }))
+      .catch(err => sendResponse({ success: false, error: err.toString() }));
+    });
+    return true; // async
+  }
+
   return true; // async
 });
 

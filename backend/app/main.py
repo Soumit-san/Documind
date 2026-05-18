@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
-from app.api import health, documents, summarize, chat, folders, export, share
+from app.api import health, documents, summarize, chat, folders, export, share, annotations
 
 # ---------------------------------------------------------------------------
 # Security: Never log document content (PRD §7.4 Phase 1)
@@ -68,6 +68,7 @@ def create_app() -> FastAPI:
     app.include_router(chat.router, prefix="/api")
     app.include_router(export.router, prefix="/api")
     app.include_router(share.router, prefix="/api")
+    app.include_router(annotations.router, prefix="/api")
 
     return app
 

@@ -386,3 +386,65 @@ USER QUESTION: {question}"""
         result["follow_up_questions"] = []
 
     return result
+
+
+# ---------------------------------------------------------------------------
+# Smart Annotations — F-06
+# ---------------------------------------------------------------------------
+ANNOTATION_SYSTEM_PROMPT = """You are DocuMind AI, an intelligent document assistant.
+Your task is to help the user understand, translate, or improve a specific highlighted passage from a document.
+Provide concise, accurate, and helpful responses.
+IMPORTANT: You MUST respond in valid JSON format ONLY. No markdown code blocks. No extra text outside the JSON."""
+
+
+def generate_annotation(text: str, action: str, language: str = None) -> dict:
+    """
+    Generate an annotation action (explain, translate, suggest) for a selected text.
+    """
+    if action == "explain":
+        user_prompt = f"""Explain the following text in plain, easy-to-understand language. Clarify any complex terms or jargon. Keep your explanation concise (2-4 sentences).
+
+Respond in this exact JSON format:
+{{"result": "Your plain language explanation here."}}
+
+TEXT TO EXPLAIN:
+{text}"""
+
+    elif action == "translate":
+        target_lang = language or "English"
+        user_prompt = f"""Translate the following text into {target_lang}.
+
+CRITICAL RULES:
+- You MUST output the translated text written in the native script of {target_lang}.
+- For Hindi, use Devanagari script (e.g., "नमस्ते").
+- For Japanese, use Japanese script (Kanji/Hiragana/Katakana).
+- For Chinese, use Chinese characters (Hanzi).
+- For French, German, Spanish, etc., use their standard Latin-based scripts with proper accents.
+- Do NOT transliterate into English letters. Use the actual native script.
+- Maintain the original professional tone and meaning.
+
+Respond in this exact JSON format:
+{{"result": "The full translated text in {target_lang} native script here."}}
+
+TEXT TO TRANSLATE:
+{text}"""
+
+    elif action == "suggest":
+        user_prompt = f"""Review the following text. Suggest alternative phrasings to make it clearer, more concise, or more professional. If it contains ambiguous legal or technical language, flag it and offer a better alternative. Keep suggestions concise.
+
+Respond in this exact JSON format:
+{{"result": "Your suggested improvements and alternative phrasings here."}}
+
+TEXT TO REVIEW:
+{text}"""
+
+    else:
+        raise ValueError(f"Unknown annotation action: {action}")
+
+    raw_response = _call_llm(user_prompt, ANNOTATION_SYSTEM_PROMPT)
+    result = _extract_json(raw_response)
+
+    if "result" not in result:
+        result["result"] = raw_response.strip()
+
+    return result
