@@ -405,6 +405,7 @@
 
     setTimeout(() => {
       const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
       const text = selection.toString().trim();
       
       if (text.length > 0) {

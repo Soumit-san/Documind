@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 from typing import Optional
+import asyncio
 import logging
 
 from app.services.llm import generate_annotation
@@ -32,12 +33,14 @@ async def create_annotation(request: AnnotationRequest):
         raise HTTPException(status_code=400, detail="Language is required for translation action.")
 
     try:
-        result_dict = generate_annotation(
+        result_dict = await asyncio.to_thread(
+            generate_annotation,
             text=request.text,
             action=request.action,
-            language=request.language
+            language=request.language,
         )
         return AnnotationResponse(result=result_dict.get("result", ""))
     except Exception as e:
         logger.error(f"Annotation failed: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to generate annotation.")
+

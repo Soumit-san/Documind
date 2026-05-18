@@ -67,6 +67,7 @@ export default function DocumentPage() {
   const [annotationResult, setAnnotationResult] = useState<{ action: string; text: string } | null>(null);
   const [translationLang, setTranslationLang] = useState("Spanish");
   const annotationMenuRef = useRef<HTMLDivElement>(null);
+  const annotationReqId = useRef(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -176,6 +177,7 @@ export default function DocumentPage() {
 
   async function handleAnnotation(action: string) {
     if (!selectedText || !token) return;
+    const thisReqId = ++annotationReqId.current;
     setAnnotationLoading(true);
     setAnnotationResult(null);
 
@@ -194,12 +196,17 @@ export default function DocumentPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Annotation failed");
-      
+
+      // Only apply if this is still the latest request
+      if (thisReqId !== annotationReqId.current) return;
       setAnnotationResult({ action, text: data.result });
     } catch (e: unknown) {
+      if (thisReqId !== annotationReqId.current) return;
       setAnnotationResult({ action: "error", text: `⚠ ${e instanceof Error ? e.message : "Failed to analyze text."}` });
     } finally {
-      setAnnotationLoading(false);
+      if (thisReqId === annotationReqId.current) {
+        setAnnotationLoading(false);
+      }
     }
   }
 
@@ -882,7 +889,7 @@ export default function DocumentPage() {
           ref={annotationMenuRef}
           style={{
             position: "absolute",
-            top: selectionRect.top + window.scrollY - (annotationResult ? 180 : 70),
+            top: Math.max(10, selectionRect.top + window.scrollY - (annotationResult ? 180 : 70)),
             left: Math.max(10, selectionRect.left + window.scrollX - 20),
             zIndex: 1000,
             background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",

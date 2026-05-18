@@ -330,6 +330,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // --- Smart Annotations (F-06) ---
   if (message.type === 'ANNOTATE_TEXT') {
+    // Validate payload
+    if (!message.data || typeof message.data.text !== 'string' || typeof message.data.action !== 'string') {
+      sendResponse({ success: false, error: 'Invalid payload' });
+      return true;
+    }
+
+    const { text, action, language } = message.data;
+
     chrome.storage.local.get(['supabaseToken'], (result) => {
       const token = result.supabaseToken;
       if (!token) {
@@ -337,17 +345,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
       fetch('http://127.0.0.1:8000/api/annotations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          text: message.data.text,
-          action: message.data.action,
-          language: message.data.language,
-        }),
+        body: JSON.stringify({ text, action, language }),
+        signal: controller.signal,
       })
       .then(async r => {
         const result = await r.json().catch(() => ({}));
@@ -355,7 +363,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return result;
       })
       .then(data => sendResponse({ success: true, result: data.result }))
-      .catch(err => sendResponse({ success: false, error: err.toString() }));
+      .catch(err => {
+        if (err.name === 'AbortError') {
+          sendResponse({ success: false, error: 'Annotation request timed out' });
+        } else {
+          sendResponse({ success: false, error: err.toString() });
+        }
+      })
+      .finally(() => clearTimeout(timeoutId));
     });
     return true; // async
   }
