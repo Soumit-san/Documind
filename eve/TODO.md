@@ -79,10 +79,10 @@ This TODO list is derived from the PRD, Tech Stack, and Design specifications, b
 
 ### F-06: Smart Annotations
 - **Frontend**
-  - [ ] Implement text selection listener in document viewer (Web App) / browser tab (Extension).
-  - [ ] Add floating action menu (Explain, Translate, Suggest).
+  - [x] Implement text selection listener in document viewer (Web App) / browser tab (Extension).
+  - [x] Add floating action menu (Explain, Translate, Suggest).
 - **Backend**
-  - [ ] Create API endpoints for specific text actions (translation, plain language explanation).
+  - [x] Create API endpoints for specific text actions (translation, plain language explanation).
 
 ### F-07: Comparative Analysis
 - **Backend**
