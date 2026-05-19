@@ -104,16 +104,17 @@ def _call_gemini(prompt: str, system: str = "") -> str:
         raise
 
 
-def _call_groq(prompt: str, system: str = "") -> str:
+def _call_groq(prompt: str, system: str = "", api_key: str = None) -> str:
     """Fallback: call Groq API (free tier — fast inference)."""
     settings = get_settings()
-    if not settings.groq_api_key or settings.groq_api_key.startswith("your-"):
+    key_to_use = api_key or settings.groq_api_key
+    if not key_to_use or key_to_use.startswith("your-"):
         raise RuntimeError("Groq API key not configured")
 
     try:
         from groq import Groq
 
-        client = Groq(api_key=settings.groq_api_key)
+        client = Groq(api_key=key_to_use)
 
         messages = []
         if system:
@@ -176,11 +177,22 @@ def _call_llm(prompt: str, system: str = "") -> str:
 
     # 2. Try Groq (secondary)
     try:
-        result = _call_groq(prompt, system)
+        result = _call_groq(prompt, system, settings.groq_api_key)
         logger.info("[Groq] Response received successfully")
         return result
     except Exception as e:
-        logger.warning("[Groq] Failed: %s — trying Ollama", str(e)[:100])
+        logger.warning("[Groq] Failed: %s", str(e)[:100])
+        
+        # 2.5 Try Groq fallback key if configured
+        if settings.groq_api_key_2 and not settings.groq_api_key_2.startswith("your-"):
+            try:
+                result = _call_groq(prompt, system, settings.groq_api_key_2)
+                logger.info("[Groq 2] Response received successfully using fallback key")
+                return result
+            except Exception as e2:
+                logger.warning("[Groq 2] Failed: %s — trying Ollama", str(e2)[:100])
+        else:
+            logger.warning("[Groq 2] Fallback key not configured — trying Ollama")
 
     # 3. Try Ollama (last resort)
     try:

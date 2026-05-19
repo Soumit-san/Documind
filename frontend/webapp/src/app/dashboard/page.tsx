@@ -160,6 +160,10 @@ export default function DashboardPage() {
           DOCUMIND<span style={{ color: "var(--on-surface-variant)" }}>AI</span>
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <button onClick={() => router.push("/dashboard/compare")} className="nb-btn nb-btn--ghost"
+            style={{ fontSize: "13px", background: "var(--tertiary-container)", color: "var(--on-tertiary-container)", borderColor: "#000" }}>
+            ⚖️ COMPARE
+          </button>
           <span style={{ fontSize: "14px", color: "var(--on-surface-variant)" }}>{user?.email}</span>
           <button onClick={handleSignOut} className="nb-btn nb-btn--ghost" style={{ fontSize: "14px" }}>
             Sign Out
