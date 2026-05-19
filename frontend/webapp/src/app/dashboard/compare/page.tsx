@@ -38,12 +38,23 @@ export default function ComparePage() {
     });
   }, []);
 
+  const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+  const validateAndSetFile = useCallback((file: File | undefined, side: "a" | "b") => {
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`File exceeds the 50MB limit.`);
+      return;
+    }
+    setError(null);
+    side === "a" ? setFileA(file) : setFileB(file);
+  }, []);
+
   const handleDrop = useCallback((e: React.DragEvent, side: "a" | "b") => {
     e.preventDefault();
     side === "a" ? setDragOverA(false) : setDragOverB(false);
-    const file = e.dataTransfer.files[0];
-    if (file) side === "a" ? setFileA(file) : setFileB(file);
-  }, []);
+    validateAndSetFile(e.dataTransfer.files[0], side);
+  }, [validateAndSetFile]);
 
   async function runComparison() {
     if (!fileA || !fileB || !token) return;
@@ -55,18 +66,20 @@ export default function ComparePage() {
     formData.append("file_a", fileA);
     formData.append("file_b", fileB);
 
+    let timer1: ReturnType<typeof setTimeout>;
+    let timer2: ReturnType<typeof setTimeout>;
+    let timer3: ReturnType<typeof setTimeout>;
+
     try {
-      const timer1 = setTimeout(() => setProcessMsg("Computing diff..."), 3000);
-      const timer2 = setTimeout(() => setProcessMsg("Running AI analysis..."), 8000);
-      const timer3 = setTimeout(() => setProcessMsg("Generating risk report..."), 15000);
+      timer1 = setTimeout(() => setProcessMsg("Computing diff..."), 3000);
+      timer2 = setTimeout(() => setProcessMsg("Running AI analysis..."), 8000);
+      timer3 = setTimeout(() => setProcessMsg("Generating risk report..."), 15000);
 
       const res = await fetch(`${API_URL}/compare`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
-
-      clearTimeout(timer1); clearTimeout(timer2); clearTimeout(timer3);
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Comparison failed");
@@ -75,6 +88,10 @@ export default function ComparePage() {
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Comparison failed");
       setStep("upload");
+    } finally {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
     }
   }
 
@@ -151,7 +168,7 @@ export default function ComparePage() {
                 style={dropZoneStyle(dragOverA, !!fileA)}
               >
                 <input id="compare-file-a" type="file" style={{ display: "none" }} accept=".pdf,.docx,.doc,.pptx,.txt,.md,.csv"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) setFileA(f); }} />
+                  onChange={(e) => validateAndSetFile(e.target.files?.[0], "a")} />
                 <div style={{ fontSize: "36px" }}>{fileA ? "✅" : "📄"}</div>
                 <p style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "16px", letterSpacing: "-0.02em" }}>
                   {fileA ? fileA.name : "DOCUMENT A — ORIGINAL"}
@@ -185,7 +202,7 @@ export default function ComparePage() {
                 style={dropZoneStyle(dragOverB, !!fileB)}
               >
                 <input id="compare-file-b" type="file" style={{ display: "none" }} accept=".pdf,.docx,.doc,.pptx,.txt,.md,.csv"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) setFileB(f); }} />
+                  onChange={(e) => validateAndSetFile(e.target.files?.[0], "b")} />
                 <div style={{ fontSize: "36px" }}>{fileB ? "✅" : "📄"}</div>
                 <p style={{ fontFamily: "var(--font-heading)", fontWeight: 800, fontSize: "16px", letterSpacing: "-0.02em" }}>
                   {fileB ? fileB.name : "DOCUMENT B — REVISED"}
@@ -203,8 +220,8 @@ export default function ComparePage() {
             </div>
 
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <button onClick={runComparison} disabled={!fileA || !fileB}
-                className="nb-btn nb-btn--primary" style={{ fontSize: "16px", padding: "16px 40px", opacity: (!fileA || !fileB) ? 0.5 : 1 }}>
+              <button onClick={runComparison} disabled={!fileA || !fileB || !token}
+                className="nb-btn nb-btn--primary" style={{ fontSize: "16px", padding: "16px 40px", opacity: (!fileA || !fileB || !token) ? 0.5 : 1 }}>
                 ⚖️ COMPARE DOCUMENTS
               </button>
             </div>
