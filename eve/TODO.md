@@ -86,11 +86,11 @@ This TODO list is derived from the PRD, Tech Stack, and Design specifications, b
 
 ### F-07: Comparative Analysis
 - **Backend**
-  - [ ] Implement document diff logic (text comparison).
-  - [ ] Add LLM prompt for risk delta and change summarization.
+  - [x] Implement document diff logic (text comparison).
+  - [x] Add LLM prompt for risk delta and change summarization.
 - **Frontend**
-  - [ ] Build dual-pane upload interface in Web App.
-  - [ ] Display visual diffs and comparative summary.
+  - [x] Build dual-pane upload interface in Web App.
+  - [x] Display visual diffs and comparative summary.
 
 ### F-08: Document Q&A Voice Mode
 - **Frontend**
